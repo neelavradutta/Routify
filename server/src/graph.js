@@ -110,8 +110,60 @@ export function loadGraph() {
     250,
   );
 
-  cache = { bbox: raw.bbox, nodes, edges: raw.edges, adjacency, nodeIndex, hotspots, builtAt: raw.builtAt };
+  const components = buildComponents(nodes.length, raw.edges);
+
+  cache = {
+    bbox: raw.bbox,
+    nodes,
+    edges: raw.edges,
+    adjacency,
+    nodeIndex,
+    hotspots,
+    builtAt: raw.builtAt,
+    components,
+  };
   return cache;
+}
+
+/** Labels each node with its connected footpath cluster; the main cluster covers most of central Delhi. */
+function buildComponents(nodeCount, edges) {
+  const parent = new Int32Array(nodeCount);
+  for (let i = 0; i < nodeCount; i++) parent[i] = i;
+
+  function find(x) {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
+    return x;
+  }
+
+  function unite(a, b) {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  }
+
+  for (const e of edges) unite(e.a, e.b);
+
+  const componentOf = new Int32Array(nodeCount);
+  const sizes = new Map();
+  for (let i = 0; i < nodeCount; i++) {
+    const root = find(i);
+    componentOf[i] = root;
+    sizes.set(root, (sizes.get(root) ?? 0) + 1);
+  }
+
+  let mainRoot = 0;
+  let mainSize = 0;
+  for (const [root, size] of sizes) {
+    if (size > mainSize) {
+      mainSize = size;
+      mainRoot = root;
+    }
+  }
+
+  return { componentOf, mainRoot, mainSize, clusterCount: sizes.size };
 }
 
 /** 0..1 exposure from seeded hotspots, decaying with distance and saturating when several overlap. */
@@ -126,21 +178,43 @@ function crimeExposure(index, lat, lng) {
   return Math.min(1, sum);
 }
 
-/** Nearest graph node to a coordinate, or null when the point is off the walkable network. */
-export function snap(graph, lat, lng, maxMetres = 150) {
-  let best = null;
-  let bestDistance = Infinity;
-  for (const radius of [80, maxMetres]) {
+/**
+ * Nearest walk-network node. Prefers the main street cluster over tiny isolated footpath
+ * islands (common when clicking parks, lawns, or building centres).
+ */
+export function snap(graph, lat, lng, maxMetres = 300) {
+  const { componentOf, mainRoot } = graph.components;
+
+  let nearestAny = null;
+  let nearestAnyDist = Infinity;
+  let nearestMain = null;
+  let nearestMainDist = Infinity;
+
+  for (const radius of [100, 200, maxMetres]) {
     for (const p of graph.nodeIndex.near(lat, lng, radius)) {
       const d = haversine(lat, lng, p.lat, p.lng);
-      if (d < bestDistance) {
-        bestDistance = d;
-        best = p.id;
+      if (d < nearestAnyDist) {
+        nearestAnyDist = d;
+        nearestAny = p.id;
+      }
+      if (componentOf[p.id] === mainRoot && d < nearestMainDist) {
+        nearestMainDist = d;
+        nearestMain = p.id;
       }
     }
-    if (best !== null) break;
+    if (nearestMain !== null && nearestMainDist <= maxMetres) break;
   }
-  return best === null ? null : { node: best, distance: bestDistance };
+
+  const onMain = nearestMain !== null && nearestMainDist <= maxMetres;
+  const node = onMain ? nearestMain : nearestAny;
+  const distance = onMain ? nearestMainDist : nearestAnyDist;
+
+  if (node === null || distance > maxMetres) return null;
+  return { node, distance, onMainNetwork: componentOf[node] === mainRoot };
+}
+
+export function sameWalkNetwork(graph, nodeA, nodeB) {
+  return graph.components.componentOf[nodeA] === graph.components.componentOf[nodeB];
 }
 
 export function inBbox(bbox, lat, lng) {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Compass, Loader2 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
@@ -13,15 +14,15 @@ type Props = { mode: 'login' | 'register' };
 const COPY = {
   login: {
     title: 'Welcome back',
-    subtitle: 'Sign in to plan a safety-weighted walk.',
+    subtitle: 'Sign in to compare Fastest, Balanced and Safest walks.',
     action: 'Sign in',
     switchText: 'New here?',
     switchLink: '/register',
     switchLabel: 'Create an account',
   },
   register: {
-    title: 'Create your account',
-    subtitle: 'Two fields, then straight to the map.',
+    title: 'Create an account',
+    subtitle: 'Email and password. Then the map.',
     action: 'Create account',
     switchText: 'Already registered?',
     switchLink: '/login',
@@ -52,23 +53,67 @@ export default function AuthCard({ mode }: Props) {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-sage text-panel">
-            <Compass size={18} strokeWidth={1.75} />
-          </span>
-          <div>
-            <p className="font-serif text-lg leading-none text-ink">Safe Routes</p>
-            <p className="mt-1 text-xs text-muted">Central Delhi, on foot</p>
+    <main className="grid min-h-dvh lg:grid-cols-[1.05fr_0.95fr]">
+      <aside className="relative hidden overflow-hidden border-r border-line bg-[#E4D9C8] px-12 py-14 lg:flex lg:flex-col lg:justify-between">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 18% 22%, rgba(58,104,84,0.18), transparent 42%), radial-gradient(circle at 78% 68%, rgba(181,74,50,0.12), transparent 36%)',
+          }}
+        />
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage text-panel shadow-press">
+              <Compass size={18} strokeWidth={1.75} />
+            </span>
+            <div>
+              <p className="font-serif text-xl leading-none text-ink">Safe Routes</p>
+              <p className="mt-1.5 text-xs tracking-wide text-muted">Central Delhi · on foot</p>
+            </div>
           </div>
+          <h1 className="mt-16 max-w-md font-serif text-[42px] leading-[1.12] text-ink">
+            The shortest walk is not always the one you take at night.
+          </h1>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
+            Lighting, isolation, cameras and area crime priors sit inside the routing cost — not as a paint layer on
+            top of it.
+          </p>
         </div>
+        <ul className="relative grid max-w-md grid-cols-3 gap-3">
+          {[
+            ['01', 'Compare', 'Three cost models'],
+            ['02', 'Score', 'Per-street 0–100'],
+            ['03', 'Filter', 'Unlit and isolated'],
+          ].map(([n, t, d]) => (
+            <li key={n} className="rounded-xl border border-line/80 bg-panel/70 p-3 backdrop-blur-sm">
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-sage">{n}</p>
+              <p className="mt-2 text-sm font-medium text-ink">{t}</p>
+              <p className="mt-1 text-[11px] text-muted">{d}</p>
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-        <div className="card p-6">
-          <h1 className="font-serif text-xl text-ink">{copy.title}</h1>
-          <p className="mt-1 text-sm text-muted">{copy.subtitle}</p>
+      <section className="flex items-center justify-center bg-ground px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-[380px]"
+        >
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sage text-panel">
+              <Compass size={16} strokeWidth={1.75} />
+            </span>
+            <p className="font-serif text-lg text-ink">Safe Routes</p>
+          </div>
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          <p className="label">Account</p>
+          <h2 className="mt-2 font-serif text-[28px] leading-tight text-ink">{copy.title}</h2>
+          <p className="mt-2 text-sm text-muted">{copy.subtitle}</p>
+
+          <form onSubmit={submit} className="mt-8 space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="label">
                 Email
@@ -102,20 +147,25 @@ export default function AuthCard({ mode }: Props) {
               />
             </div>
 
-            <button type="submit" className="btn-primary" disabled={busy}>
+            <motion.button
+              type="submit"
+              className="btn-primary mt-2"
+              disabled={busy}
+              whileTap={{ scale: busy ? 1 : 0.985 }}
+            >
               {busy ? <Loader2 size={15} className="animate-spin" /> : null}
               {copy.action}
-            </button>
+            </motion.button>
           </form>
-        </div>
 
-        <p className="mt-5 text-center text-sm text-muted">
-          {copy.switchText}{' '}
-          <Link href={copy.switchLink} className="text-sage underline underline-offset-4 hover:text-sage-dark">
-            {copy.switchLabel}
-          </Link>
-        </p>
-      </div>
+          <p className="mt-6 text-sm text-muted">
+            {copy.switchText}{' '}
+            <Link href={copy.switchLink} className="font-medium text-sage underline underline-offset-4 hover:text-sage-dark">
+              {copy.switchLabel}
+            </Link>
+          </p>
+        </motion.div>
+      </section>
     </main>
   );
 }

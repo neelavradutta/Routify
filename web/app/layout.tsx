@@ -31,12 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#F7F1E8',
-              color: '#1F1A16',
-              border: '1px solid #D9D0C3',
-              borderRadius: '8px',
+              background: '#F4EEE4',
+              color: '#1C1713',
+              border: '1px solid #D4C9BA',
+              borderRadius: '12px',
               fontSize: '13px',
-              boxShadow: '0 6px 20px -12px rgba(31, 26, 22, 0.35)',
+              boxShadow: '0 12px 32px -16px rgba(28, 23, 19, 0.38)',
             },
           }}
         />

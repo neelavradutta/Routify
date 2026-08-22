@@ -1,4 +1,4 @@
-import { loadGraph, snap, haversine, inBbox } from './graph.js';
+import { loadGraph, snap, haversine, inBbox, sameWalkNetwork } from './graph.js';
 import {
   PROFILES,
   buildCostTable,
@@ -263,6 +263,7 @@ export function planRoutes({ from, to, night, filters }) {
   const goal = snap(graph, to.lat, to.lng);
   if (!start || !goal) return { error: 'NO_WALKABLE_START' };
   if (start.node === goal.node) return { error: 'TOO_CLOSE' };
+  if (!sameWalkNetwork(graph, start.node, goal.node)) return { error: 'DISCONNECTED' };
 
   const table = buildCostTable(graph, night, filters);
   const routes = [];

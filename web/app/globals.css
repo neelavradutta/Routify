@@ -24,55 +24,89 @@
   }
 
   :focus-visible {
-    @apply ring-2 ring-sage/40 ring-offset-2 ring-offset-panel;
+    @apply ring-2 ring-sage/45 ring-offset-2 ring-offset-panel;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c9bbaa;
+    border-radius: 999px;
+    border: 2px solid #f4eee4;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-lg border border-line bg-panel shadow-panel;
+    @apply rounded-xl border border-line/90 bg-panel shadow-panel;
   }
 
   .field {
-    @apply w-full rounded-md border border-line bg-white/70 px-3 py-2 text-sm text-ink
-      placeholder:text-muted/70 transition-colors duration-150 ease-calm
-      focus:border-sage/60 focus:bg-white;
+    @apply w-full rounded-lg border border-line bg-[#FBF7F0] px-3 py-2.5 text-sm text-ink
+      placeholder:text-muted/60 transition-all duration-200 ease-calm
+      hover:border-[#cbbfae] focus:border-sage focus:bg-[#FFFcf7] focus:shadow-[0_0_0_4px_rgba(58,104,84,0.12)];
   }
 
   .btn-primary {
-    @apply inline-flex w-full items-center justify-center gap-2 rounded-md bg-sage px-4 py-2.5
-      text-sm font-medium text-panel transition-colors duration-150 ease-calm
-      hover:bg-sage-dark disabled:cursor-not-allowed disabled:bg-sage/40;
+    @apply relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg
+      bg-sage px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-panel shadow-press
+      transition-all duration-200 ease-calm hover:-translate-y-px hover:bg-sage-dark hover:shadow-lift
+      active:translate-y-0 active:scale-[0.985] disabled:pointer-events-none disabled:translate-y-0
+      disabled:bg-sage/35 disabled:shadow-none;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line bg-transparent
-      px-3 py-2 text-sm text-muted transition-colors duration-150 ease-calm hover:bg-white/60 hover:text-ink;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-[#FBF7F0]
+      px-3 py-2 text-[13px] font-medium text-muted transition-all duration-200 ease-calm
+      hover:border-[#cbbfae] hover:bg-white/70 hover:text-ink active:scale-[0.98]
+      disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-icon {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel
-      text-muted shadow-panel transition-colors duration-150 ease-calm hover:text-ink;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line/80 bg-panel/95
+      text-muted shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
+      hover:-translate-y-px hover:text-ink hover:shadow-lift active:translate-y-0 active:scale-95;
   }
 
   .label {
-    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted;
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-[#FBF7F0] px-2.5 py-1
+      text-[11px] font-medium text-ink;
   }
 }
 
-/* Leaflet defaults are loud; tone them down to match the panel palette. */
 .leaflet-container {
   @apply bg-ground font-sans;
 }
 
 .leaflet-control-attribution {
-  @apply !bg-panel/80 !text-[10px] !text-muted;
+  @apply !bg-panel/85 !text-[10px] !text-muted !backdrop-blur-sm;
 }
 
 .leaflet-tooltip {
-  @apply !rounded-md !border-line !bg-panel !px-2 !py-1 !text-xs !text-ink !shadow-lift;
+  @apply !rounded-lg !border-line !bg-panel !px-2.5 !py-1.5 !text-xs !text-ink !shadow-lift;
 }
 
 .leaflet-tooltip::before {
   display: none;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }

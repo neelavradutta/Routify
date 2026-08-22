@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Compass } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import RouteRail from '@/components/RouteRail';
@@ -26,22 +27,31 @@ export default function HomePage() {
 
   if (!ready || !token) {
     return (
-      <main className="flex min-h-dvh items-center justify-center">
-        <span className="flex items-center gap-2 text-sm text-muted">
-          <Compass size={16} strokeWidth={1.75} className="text-sage" />
-          Loading Safe Routes
-        </span>
+      <main className="flex min-h-dvh items-center justify-center bg-ground">
+        <motion.span
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 text-sm text-muted"
+        >
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-sage text-panel">
+            <span className="absolute inset-0 rounded-lg bg-sage/40 animate-pulseRing" />
+            <Compass size={16} strokeWidth={1.75} />
+          </span>
+          Opening the map
+        </motion.span>
       </main>
     );
   }
 
   return (
-    <main className="flex h-dvh overflow-hidden">
-      <div className="w-[360px] shrink-0">
+    <main className="flex h-dvh overflow-hidden bg-ground">
+      <div className="relative z-20 w-[400px] shrink-0">
         <RouteRail />
       </div>
-      <div className="relative flex-1">
-        <MapView />
+      <div className="relative min-w-0 flex-1 p-3 pl-0">
+        <div className="relative h-full overflow-hidden rounded-2xl border border-line/80 shadow-lift">
+          <MapView />
+        </div>
       </div>
     </main>
   );

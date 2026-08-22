@@ -33,8 +33,12 @@ const planRequest = z.object({
 const ERRORS = {
   START_OUT_OF_AREA: [400, 'Start point is outside the covered area of central Delhi'],
   END_OUT_OF_AREA: [400, 'Destination is outside the covered area of central Delhi'],
-  NO_WALKABLE_START: [400, 'No walkable street found near one of those points'],
+  NO_WALKABLE_START: [400, 'No walkable street within 300 m. Click closer to a road or search a street address.'],
   TOO_CLOSE: [400, 'Those two points are on the same spot'],
+  DISCONNECTED: [
+    400,
+    'These points sit on separate footpath islands in our map. Move each pin closer to a main road.',
+  ],
   NO_ROUTE: [404, 'No walking route connects those points'],
 };
 
