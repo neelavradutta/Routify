@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 import { mkdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const dbPath = process.env.AUTH_DB_PATH || join(dataDir, 'users.sqlite');
-const db = new DatabaseSync(dbPath);
+const db = new Database(dbPath);
 db.exec(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE COLLATE NOCASE,
