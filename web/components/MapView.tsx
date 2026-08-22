@@ -108,6 +108,14 @@ function Controls({
 }) {
   const map = useMap();
   const { mapDark, toggleMap } = useApp();
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
 
   useEffect(() => {
     if (!bounds || fitKey !== 'pins') return;
@@ -129,7 +137,12 @@ function Controls({
   }
 
   return (
-    <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-2">
+    <div
+      ref={box}
+      className="absolute right-4 top-4 z-[1000] flex flex-col gap-2"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
       <button type="button" onClick={toggleMap} className="btn-icon" title={mapDark ? 'Light map' : 'Dark map'}>
         {mapDark ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
       </button>

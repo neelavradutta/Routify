@@ -45,15 +45,15 @@ function FilterButton({
     >
       <motion.span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[#8B5E3C]"
+        className="pointer-events-none absolute inset-0 bg-amber-100"
         initial={false}
         animate={{ x: pressed ? '0%' : '-100%' }}
         transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
       />
-      <span className="relative z-10 mt-0.5 text-muted">{icon}</span>
+      <span className={`relative z-10 mt-0.5 ${pressed ? 'text-amber-800' : 'text-muted'}`}>{icon}</span>
       <span className="relative z-10 min-w-0 flex-1">
-        <span className="block text-[13px] font-medium text-ink">{label}</span>
-        <span className="mt-0.5 block text-[11px] text-muted">{hint}</span>
+        <span className={`block text-[13px] font-medium ${pressed ? 'text-amber-950' : 'text-ink'}`}>{label}</span>
+        <span className={`mt-0.5 block text-[11px] ${pressed ? 'text-amber-800' : 'text-muted'}`}>{hint}</span>
       </span>
     </motion.button>
   );
@@ -191,29 +191,17 @@ export default function RouteRail() {
         <Logo size={36} />
         <motion.button
           type="button"
-          initial="rest"
-          whileHover="on"
-          whileTap="on"
-          className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white text-ink"
+          aria-label={email ? `Sign out ${email}` : 'Sign out'}
           title={email ? `Sign out ${email}` : 'Sign out'}
           onClick={() => {
             signOut();
             router.replace('/login');
           }}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.97 }}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-violet-800 transition-colors duration-200 hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
         >
-          <motion.span
-            aria-hidden
-            variants={{ rest: { x: '-100%' }, on: { x: '0%' } }}
-            transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
-            className="pointer-events-none absolute inset-0 bg-[#8B5E3C]"
-          />
-          <motion.span
-            className="relative z-10 inline-flex"
-            variants={{ rest: { x: 0, rotate: 0 }, on: { x: 4, rotate: -12 } }}
-            transition={{ type: 'spring', stiffness: 480, damping: 18 }}
-          >
-            <LogOut size={15} strokeWidth={1.75} />
-          </motion.span>
+          <LogOut size={15} strokeWidth={2.25} />
         </motion.button>
       </header>
 
