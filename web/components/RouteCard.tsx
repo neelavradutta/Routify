@@ -109,15 +109,6 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
               })}
             </div>
 
-            {route.weakest.length > 0 && (
-              <p className="mt-3 text-[12px] leading-relaxed text-muted">
-                Weakest stretch: <span className="font-medium text-ink">{route.weakest[0].name}</span> at{' '}
-                {route.weakest[0].score}/100 over {formatDistance(route.weakest[0].length)}.
-              </p>
-            )}
-            {route.duplicateOf && (
-              <p className="mt-2 text-[11px] text-muted">Same streets as another option — no safer detour on this pair.</p>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -45,7 +45,7 @@ export default function HomePage() {
       <div className="relative z-20 w-[400px] shrink-0">
         <RouteRail />
       </div>
-      <div className="relative min-w-0 flex-1 p-3">
+      <div className="relative min-w-0 flex-1 p-5">
         <div className="relative h-full overflow-hidden rounded-2xl shadow-lift">
           <MapView />
         </div>

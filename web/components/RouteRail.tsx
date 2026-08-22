@@ -4,16 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import {
   ArrowUpDown,
   Loader2,
   LogOut,
@@ -27,7 +17,7 @@ import {
   Trees,
 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
-import { api, SCORE_COLORS, scoreTone, formatDistance, type Place } from '@/lib/api';
+import { api, SCORE_COLORS, type Place } from '@/lib/api';
 import Logo from '@/components/Logo';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -52,14 +42,17 @@ function FilterButton({
       onClick={onClick}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.985 }}
-      className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-200 ease-calm ${
-        pressed
-          ? 'border-lime-400 bg-lime-50 shadow-panel'
-          : 'border-line bg-white hover:border-lime-300 hover:bg-lime-50/60 hover:shadow-panel'
-      }`}
+      className="relative flex w-full items-start gap-3 overflow-hidden rounded-xl border border-zinc-900 bg-white px-3 py-2.5 text-left"
     >
-      <span className="mt-0.5 text-muted">{icon}</span>
-      <span className="min-w-0 flex-1">
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[#8B5E3C]"
+        initial={false}
+        animate={{ x: pressed ? '0%' : '-100%' }}
+        transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
+      />
+      <span className="relative z-10 mt-0.5 text-muted">{icon}</span>
+      <span className="relative z-10 min-w-0 flex-1">
         <span className="block text-[13px] font-medium text-ink">{label}</span>
         <span className="mt-0.5 block text-[11px] text-muted">{hint}</span>
       </span>
@@ -97,8 +90,8 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const { results } = await api.search(token, query.trim());
-        setResults(results);
+        const { results: next } = await api.search(token, query.trim());
+        setResults(next);
         setOpen(true);
       } catch {
         setResults([]);
@@ -118,7 +111,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
         <label className="label" htmlFor={`place-${which}`}>
           {isStart ? 'Start' : 'Destination'}
         </label>
-        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-lime-700">Map click</span>}
+        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-900">Map click</span>}
       </div>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
@@ -133,7 +126,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
           }}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isStart ? 'Connaught Place' : 'Khan Market'}
-          className={`field pl-10 pr-9 ${active ? 'border-lime-600' : ''}`}
+          className={`field pl-10 pr-9 ${active ? 'border-zinc-900' : ''}`}
           autoComplete="off"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
@@ -168,53 +161,6 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
           </motion.ul>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function Comparison({
-  routes,
-}: {
-  routes: { id: string; label: string; safety: number; duration: number; distance: number }[];
-}) {
-  const data = routes.map((r) => ({
-    name: r.label,
-    safety: r.safety,
-    minutes: r.duration,
-    distance: r.distance,
-  }));
-
-  return (
-    <div className="h-36 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 4, left: -28, bottom: 0 }} barGap={4}>
-          <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 5" vertical={false} />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
-          <YAxis yAxisId="score" domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} />
-          <YAxis yAxisId="time" orientation="right" hide />
-          <ChartTooltip
-            cursor={{ fill: 'rgba(28,23,19,0.04)' }}
-            contentStyle={{
-              background: '#FFFFFF',
-              border: '1px solid #E5E7EB',
-              borderRadius: 10,
-              fontSize: 12,
-              color: '#0F172A',
-            }}
-            formatter={(value, name) => (name === 'Safety' ? [`${value}/100`, name] : [`${value} min`, name])}
-            labelFormatter={(label) => {
-              const row = data.find((d) => d.name === label);
-              return row ? `${row.name} · ${formatDistance(row.distance)}` : label;
-            }}
-          />
-          <Bar yAxisId="score" dataKey="safety" name="Safety" radius={[4, 4, 0, 0]} maxBarSize={22}>
-            {data.map((row) => (
-              <Cell key={row.name} fill={SCORE_COLORS[scoreTone(row.safety)]} />
-            ))}
-          </Bar>
-          <Bar yAxisId="time" dataKey="minutes" name="Minutes" fill="#38BDF8" radius={[4, 4, 0, 0]} maxBarSize={22} />
-        </BarChart>
-      </ResponsiveContainer>
     </div>
   );
 }
@@ -268,21 +214,34 @@ export default function RouteRail() {
   const [spin, setSpin] = useState(0);
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-line bg-panel">
+    <aside className="flex h-full w-full flex-col border-r border-zinc-900 bg-panel">
       <header className="flex items-center justify-between border-b border-line px-5 py-4">
         <Logo size={36} />
         <motion.button
           type="button"
-          className="btn-icon !h-9 !w-9 !rounded-lg"
+          initial="rest"
+          whileHover="on"
+          whileTap="on"
+          className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-900 bg-white text-ink"
           title={email ? `Sign out ${email}` : 'Sign out'}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.94 }}
           onClick={() => {
             signOut();
             router.replace('/login');
           }}
         >
-          <LogOut size={15} strokeWidth={1.75} />
+          <motion.span
+            aria-hidden
+            variants={{ rest: { x: '-100%' }, on: { x: '0%' } }}
+            transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
+            className="pointer-events-none absolute inset-0 bg-[#8B5E3C]"
+          />
+          <motion.span
+            className="relative z-10 inline-flex"
+            variants={{ rest: { x: 0, rotate: 0 }, on: { x: 4, rotate: -12 } }}
+            transition={{ type: 'spring', stiffness: 480, damping: 18 }}
+          >
+            <LogOut size={15} strokeWidth={1.75} />
+          </motion.span>
         </motion.button>
       </header>
 
@@ -320,7 +279,13 @@ export default function RouteRail() {
 
         <section className="space-y-2">
           <p className="label">Time of day</p>
-          <div className="relative grid grid-cols-2 gap-1 rounded-xl border border-line bg-lime-50 p-1">
+          <div className="relative grid grid-cols-2 rounded-xl border border-slate-200 bg-white p-1">
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-sky-100"
+              animate={{ x: night ? '100%' : '0%' }}
+              transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
+            />
             {[
               { on: false, label: 'Day', icon: <Sun size={14} strokeWidth={1.75} /> },
               { on: true, label: 'Night', icon: <Moon size={14} strokeWidth={1.75} /> },
@@ -332,20 +297,11 @@ export default function RouteRail() {
                   if (night !== option.on) toggle('night');
                 }}
                 className={`relative z-10 flex items-center justify-center gap-2 rounded-lg py-2 text-[13px] font-medium transition-colors duration-200 ${
-                  night === option.on ? 'text-lime-900' : 'text-muted hover:text-ink'
+                  night === option.on ? 'text-sky-950' : 'text-muted hover:text-ink'
                 }`}
               >
-                {night === option.on && (
-                  <motion.span
-                    layoutId="tod-pill"
-                    className="absolute inset-0 rounded-lg bg-white shadow-panel"
-                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-2">
-                  {option.icon}
-                  {option.label}
-                </span>
+                {option.icon}
+                {option.label}
               </button>
             ))}
           </div>
@@ -402,18 +358,6 @@ export default function RouteRail() {
               transition={{ duration: 0.28, ease: EASE }}
               className="space-y-4 border-t border-line pt-5"
             >
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="label">Compare</p>
-                  <p className="mt-1 font-serif text-lg text-ink">Safety against time</p>
-                </div>
-                <p className="text-[11px] text-muted">{plan.zones.length} flagged zones</p>
-              </div>
-
-              <div className="card p-3.5">
-                <Comparison routes={plan.routes} />
-              </div>
-
               <div className="card p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="label">Why this route</p>
