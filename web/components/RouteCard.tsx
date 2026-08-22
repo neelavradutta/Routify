@@ -21,10 +21,10 @@ const ROUTE_PAINT: Record<string, { fill: string; selected: string }> = {
 };
 
 const FACTORS = [
-  { key: 'light', label: 'Lit', invert: false },
-  { key: 'camera', label: 'Cameras', invert: false },
-  { key: 'isolation', label: 'Isolation', invert: true },
-  { key: 'crime', label: 'Crime', invert: true },
+  { key: 'light', label: 'Lit', color: '#0284C7' },
+  { key: 'camera', label: 'Cameras', color: '#4D7C0F' },
+  { key: 'isolation', label: 'Isolation', color: '#92400E' },
+  { key: 'crime', label: 'Crime', color: '#9F1239' },
 ] as const;
 
 export default function RouteCard({ route, fastest, selected, onSelect, index }: Props) {
@@ -88,21 +88,20 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
           >
             <div className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-line/80 pt-3.5">
               {FACTORS.map((factor) => {
-                const value = route.factors[factor.key];
-                const good = factor.invert ? 1 - value : value;
+                const pct = Math.round(route.factors[factor.key] * 100);
                 return (
                   <div key={factor.key}>
                     <div className="flex items-baseline justify-between">
                       <span className="text-[11px] text-muted">{factor.label}</span>
-                      <span className="text-[11px] tabular-nums text-ink">{Math.round(value * 100)}%</span>
+                      <span className="text-[11px] tabular-nums text-ink">{pct}%</span>
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line/80">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.round(good * 100)}%` }}
+                        animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.45, ease: EASE }}
                         className="h-full rounded-full"
-                        style={{ backgroundColor: paint.fill }}
+                        style={{ backgroundColor: factor.color }}
                       />
                     </div>
                   </div>

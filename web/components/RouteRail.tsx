@@ -251,8 +251,7 @@ export default function RouteRail() {
             <Compass size={16} strokeWidth={1.75} />
           </span>
           <div>
-            <p className="font-serif text-[17px] leading-none text-ink">Safe Routes</p>
-            <p className="mt-1 text-[11px] tracking-wide text-muted">Central Delhi · pedestrian</p>
+            <p className="font-serif text-[17px] leading-none text-ink">Routify</p>
           </div>
         </div>
         <motion.button

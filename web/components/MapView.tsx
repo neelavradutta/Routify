@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -16,7 +16,17 @@ const ROUTE_RED_GHOST = '#F87171';
 
 const CENTER: [number, number] = [28.6139, 77.2295];
 const BBOX = { south: 28.55, west: 77.15, north: 28.68, east: 77.28 };
-const FLY = { padding: [88, 88] as [number, number], duration: 1.2, easeLinearity: 0.22 };
+const DRAW_MS = 3400;
+const FLY_MS = 1.2;
+
+function fitOptions(insetLeft: boolean): L.FitBoundsOptions {
+  return {
+    paddingTopLeft: [insetLeft ? 408 : 72, 88],
+    paddingBottomRight: [72, 104],
+    duration: FLY_MS,
+    easeLinearity: 0.22,
+  };
+}
 
 function pinIcon(kind: 'from' | 'to') {
   const start = kind === 'from';
@@ -78,14 +88,23 @@ function ClickToPick() {
   return null;
 }
 
-function Controls({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
+function Controls({
+  bounds,
+  insetLeft,
+  fitKey,
+}: {
+  bounds: L.LatLngBoundsExpression | null;
+  insetLeft: boolean;
+  fitKey: string;
+}) {
   const map = useMap();
   const { mapDark, toggleMap } = useApp();
+  const fly = fitOptions(insetLeft);
 
   useEffect(() => {
     if (!bounds) return;
-    map.flyToBounds(bounds, FLY);
-  }, [bounds, map]);
+    map.flyToBounds(bounds, fitOptions(insetLeft));
+  }, [bounds, map, fitKey, insetLeft]);
 
   function locate() {
     navigator.geolocation.getCurrentPosition(
@@ -111,7 +130,7 @@ function Controls({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
       </button>
       <button
         type="button"
-        onClick={() => map.flyToBounds(bounds ?? [[BBOX.south, BBOX.west], [BBOX.north, BBOX.east]], FLY)}
+        onClick={() => map.flyToBounds(bounds ?? [[BBOX.south, BBOX.west], [BBOX.north, BBOX.east]], fly)}
         className="btn-icon"
         title="Fit route"
       >
@@ -132,31 +151,63 @@ function routePoints(route: Route) {
   return out;
 }
 
-function FadePolyline({
-  positions,
-  pathOptions,
-}: {
-  positions: [number, number][];
-  pathOptions: L.PathOptions;
-}) {
-  const ref = useRef<L.Polyline | null>(null);
+function traceAt(pts: [number, number][], t: number): [number, number][] {
+  if (pts.length < 2) return pts;
+  const dist = [0];
+  for (let i = 1; i < pts.length; i++) {
+    dist.push(dist[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  }
+  const target = dist[dist.length - 1] * Math.min(1, Math.max(0, t));
+  const out: [number, number][] = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    if (dist[i] <= target) {
+      out.push(pts[i]);
+      continue;
+    }
+    const span = dist[i] - dist[i - 1] || 1;
+    const u = (target - dist[i - 1]) / span;
+    out.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u]);
+    break;
+  }
+  return out;
+}
+
+function TraceRoute({ playKey, positions }: { playKey: string; positions: [number, number][] }) {
+  const [drawn, setDrawn] = useState<[number, number][]>([]);
+  const ptsRef = useRef(positions);
+  ptsRef.current = positions;
 
   useEffect(() => {
-    const line = ref.current;
-    if (!line) return;
-    const el = line.getElement() as SVGElement | undefined;
-    if (!el) return;
+    const pts = ptsRef.current;
+    setDrawn(pts.slice(0, 2));
+    let raf = 0;
+    const origin = performance.now();
 
-    el.style.opacity = '0';
-    el.style.transition = 'none';
-    const frame = window.requestAnimationFrame(() => {
-      el.style.transition = 'opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1)';
-      el.style.opacity = String(pathOptions.opacity ?? 1);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [positions, pathOptions.opacity]);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - origin) / DRAW_MS);
+      const eased = 1 - (1 - t) ** 3;
+      setDrawn(traceAt(pts, eased));
+      if (t < 1) raf = window.requestAnimationFrame(tick);
+    };
 
-  return <Polyline ref={ref} positions={positions} pathOptions={pathOptions} className="route-fade" />;
+    raf = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(raf);
+  }, [playKey]);
+
+  if (drawn.length < 2) return null;
+
+  return (
+    <>
+      <Polyline
+        positions={drawn}
+        pathOptions={{ color: '#7F1D1D', weight: 12, opacity: 0.16, lineCap: 'round', lineJoin: 'round' }}
+      />
+      <Polyline
+        positions={drawn}
+        pathOptions={{ color: ROUTE_RED, weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
+      />
+    </>
+  );
 }
 
 export default function MapView() {
@@ -201,7 +252,7 @@ export default function MapView() {
 
         <SizeFixer />
         <ClickToPick />
-        <Controls bounds={bounds} />
+        <Controls bounds={bounds} insetLeft={Boolean(plan)} fitKey={active?.id ?? 'pins'} />
 
         {showZones &&
           plan?.zones.slice(0, 18).map((zone, i) => (
@@ -228,22 +279,7 @@ export default function MapView() {
 
         {active && activeLine.length > 1 && (
           <>
-            <FadePolyline
-              key={`halo-${active.id}`}
-              positions={activeLine}
-              pathOptions={{ color: '#7F1D1D', weight: 12, opacity: 0.16, lineCap: 'round', lineJoin: 'round' }}
-            />
-            <FadePolyline
-              key={`draw-${active.id}-${activeLine.length}`}
-              positions={activeLine}
-              pathOptions={{
-                color: ROUTE_RED,
-                weight: 6,
-                opacity: 1,
-                lineCap: 'round',
-                lineJoin: 'round',
-              }}
-            />
+            <TraceRoute key={active.id} playKey={active.id} positions={activeLine} />
             {active.segments.map((segment, i) => (
               <Polyline
                 key={`hit-${active.id}-${i}`}
