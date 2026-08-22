@@ -81,11 +81,11 @@ async function request<T>(path: string, init: RequestInit & { token?: string | n
   return data as T;
 }
 
-type Session = { token: string; user: { id: number; email: string } };
+type Session = { token: string; user: { id: number; email: string; fullName?: string | null } };
 
 export const api = {
-  register: (email: string, password: string) =>
-    request<Session>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email: string, password: string, fullName: string) =>
+    request<Session>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, fullName }) }),
 
   login: (email: string, password: string) =>
     request<Session>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),

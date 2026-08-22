@@ -52,11 +52,11 @@ function pinIcon(kind: 'from' | 'to') {
 
   return L.divIcon({
     className: 'map-pin',
-    iconSize: [36, 46],
-    iconAnchor: [18, 44],
-    popupAnchor: [0, -40],
+    iconSize: [26, 33],
+    iconAnchor: [13, 32],
+    popupAnchor: [0, -28],
     html: `<div class="map-pin-inner">
-      <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="26" height="33" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M18 1.5C9.44 1.5 2.5 8.3 2.5 16.7c0 10.4 13.4 26.3 14.9 28a1.2 1.2 0 0 0 1.2 0c1.5-1.7 14.9-17.6 14.9-28C33.5 8.3 26.56 1.5 18 1.5Z" fill="${fill}" stroke="white" stroke-width="2"/>
         <circle cx="18" cy="16.5" r="8.2" fill="white"/>
         ${glyph}
