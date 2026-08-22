@@ -1,0 +1,54 @@
+{
+  "title": "NCRB Crime against Women (IPC/BNS + SLL) - state and UT rates per lakh women",
+  "sources": [
+    {
+      "label": "NCRB Crime in India, Table 3A.1 (2020-2022)",
+      "url": "https://ncrb.gov.in/uploads/nationalcrimerecordsbureau/custom/1701935135TABLE3A1.pdf",
+      "gives": "rate2022 for every state and UT"
+    },
+    {
+      "label": "NCRB Crime in India 2024, summarised by CEDA, Ashoka University",
+      "url": "https://ceda.ashoka.edu.in/what-indias-2024-crime-statistics-reveal-and-miss-about-violence-against-women/",
+      "gives": "rate2024 for the states it publishes"
+    }
+  ],
+  "national": { "rate2022": 66.4, "rate2024": 64.6 },
+  "states": [
+    { "name": "Andhra Pradesh", "lat": 15.9, "lng": 79.74, "rate2022": 96.2 },
+    { "name": "Arunachal Pradesh", "lat": 28.0, "lng": 94.7, "rate2022": 44.4 },
+    { "name": "Assam", "lat": 26.2, "lng": 92.9, "rate2022": 81.2 },
+    { "name": "Bihar", "lat": 25.6, "lng": 85.4, "rate2022": 33.5 },
+    { "name": "Chhattisgarh", "lat": 21.3, "lng": 82.0, "rate2022": 58.2 },
+    { "name": "Goa", "lat": 15.35, "lng": 74.05, "rate2022": 35.1 },
+    { "name": "Gujarat", "lat": 22.7, "lng": 71.7, "rate2022": 22.9, "rate2024": 22.0 },
+    { "name": "Haryana", "lat": 29.2, "lng": 76.3, "rate2022": 118.7, "rate2024": 96.4 },
+    { "name": "Himachal Pradesh", "lat": 31.9, "lng": 77.3, "rate2022": 42.3 },
+    { "name": "Jharkhand", "lat": 23.6, "lng": 85.3, "rate2022": 40.2 },
+    { "name": "Karnataka", "lat": 15.0, "lng": 75.8, "rate2022": 53.6 },
+    { "name": "Kerala", "lat": 10.4, "lng": 76.4, "rate2022": 82.0 },
+    { "name": "Madhya Pradesh", "lat": 23.5, "lng": 78.4, "rate2022": 78.8 },
+    { "name": "Maharashtra", "lat": 19.5, "lng": 75.7, "rate2022": 75.1 },
+    { "name": "Manipur", "lat": 24.7, "lng": 93.9, "rate2022": 15.6, "rate2024": 12.0 },
+    { "name": "Meghalaya", "lat": 25.5, "lng": 91.3, "rate2022": 41.6 },
+    { "name": "Mizoram", "lat": 23.3, "lng": 92.8, "rate2022": 24.1 },
+    { "name": "Nagaland", "lat": 26.1, "lng": 94.5, "rate2022": 4.6, "rate2024": 5.1 },
+    { "name": "Odisha", "lat": 20.5, "lng": 84.8, "rate2022": 103.3, "rate2024": 118.3 },
+    { "name": "Punjab", "lat": 31.0, "lng": 75.4, "rate2022": 38.4 },
+    { "name": "Rajasthan", "lat": 26.9, "lng": 74.2, "rate2022": 115.1, "rate2024": 91.3 },
+    { "name": "Sikkim", "lat": 27.5, "lng": 88.5, "rate2022": 55.4 },
+    { "name": "Tamil Nadu", "lat": 11.1, "lng": 78.6, "rate2022": 24.0, "rate2024": 29.4 },
+    { "name": "Telangana", "lat": 17.9, "lng": 79.0, "rate2022": 117.0, "rate2024": 128.6 },
+    { "name": "Tripura", "lat": 23.8, "lng": 91.7, "rate2022": 37.1 },
+    { "name": "Uttar Pradesh", "lat": 27.0, "lng": 80.6, "rate2022": 58.6, "rate2024": 58.0 },
+    { "name": "Uttarakhand", "lat": 30.1, "lng": 79.1, "rate2022": 77.0 },
+    { "name": "West Bengal", "lat": 23.4, "lng": 87.9, "rate2022": 71.8 },
+    { "name": "Andaman and Nicobar Islands", "lat": 11.7, "lng": 92.7, "rate2022": 93.7 },
+    { "name": "Chandigarh", "lat": 30.73, "lng": 76.78, "rate2022": 57.7 },
+    { "name": "Dadra and Nagar Haveli and Daman and Diu", "lat": 20.3, "lng": 72.9, "rate2022": 30.4 },
+    { "name": "Delhi", "lat": 28.65, "lng": 77.1, "rate2022": 144.4, "rate2024": 130.7 },
+    { "name": "Jammu and Kashmir", "lat": 33.6, "lng": 75.0, "rate2022": 57.6 },
+    { "name": "Ladakh", "lat": 34.3, "lng": 77.6, "rate2022": 11.5 },
+    { "name": "Lakshadweep", "lat": 10.6, "lng": 72.6, "rate2022": 48.5 },
+    { "name": "Puducherry", "lat": 11.94, "lng": 79.83, "rate2022": 23.6 }
+  ]
+}

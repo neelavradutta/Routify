@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google';
+import { IBM_Plex_Sans, Plus_Jakarta_Sans, Source_Serif_4 } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
@@ -9,6 +9,12 @@ const sans = IBM_Plex_Sans({
   variable: '--font-sans',
 });
 
+const brand = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['700', '800'],
+  variable: '--font-brand',
+});
+
 const serif = Source_Serif_4({
   subsets: ['latin'],
   weight: ['400', '600'],
@@ -16,13 +22,13 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: 'Routify — safer walking in India',
+  title: 'Routify',
   description: 'Pick a faster, mixed, or safer walk through Indian cities.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="en" className={`${sans.variable} ${brand.variable} ${serif.variable}`}>
       <body>
         {children}
         <Toaster

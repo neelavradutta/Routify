@@ -1,12 +1,31 @@
+# Dependencies
 node_modules/
+
+# Next.js
 .next/
+out/
 next-env.d.ts
 *.tsbuildinfo
 
+# Environment (keep the *.example templates)
 .env
-.env.local
+.env.*
+!.env.example
+!.env.local.example
 
-server/data/graph.json
+# Local database
 server/data/users.sqlite
+server/data/users.sqlite-*
+
+# Generated / cached data (crime.geojson + NCRB JSON stay in git)
+server/data/graph.json
 server/data/.cache/
 server/data/tiles/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db

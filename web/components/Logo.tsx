@@ -4,7 +4,7 @@ type Props = {
   wordClass?: string;
 };
 
-export default function Logo({ size = 36, withWord = true, wordClass = 'font-serif text-[17px] leading-none text-ink' }: Props) {
+export default function Logo({ size = 36, withWord = true, wordClass = 'font-brand text-[17px] font-extrabold leading-none tracking-tight text-ink' }: Props) {
   return (
     <div className="flex items-center gap-3">
       <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden className="shrink-0 drop-shadow-sm">

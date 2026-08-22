@@ -10,6 +10,7 @@ import { geocodeRouter } from './geocode.js';
 import { planRoutes } from './route.js';
 import { explainPlan } from './explain.js';
 import { loadCrime } from './graph.js';
+import { crimeStats } from './regions.js';
 import { coverageBbox } from './corridor.js';
 
 const app = express();
@@ -73,6 +74,7 @@ app.get('/api/health', (_req, res) => {
     coverage: coverageBbox(),
     mode: 'india-corridors',
     hotspots: loadCrime().length,
+    crimeData: crimeStats(),
   });
 });
 

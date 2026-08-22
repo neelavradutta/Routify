@@ -61,7 +61,7 @@ export default function AuthCard({ mode }: Props) {
   return (
     <div className="w-full max-w-[380px]">
       <div className="mb-8 lg:hidden">
-        <Logo size={36} wordClass="font-serif text-lg leading-none text-ink" />
+        <Logo size={36} wordClass="font-brand text-lg font-extrabold leading-none tracking-tight text-ink" />
       </div>
 
       <p className="label">Account</p>

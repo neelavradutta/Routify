@@ -104,12 +104,52 @@ function inIndia(lat: number, lng: number) {
   return lat >= BBOX.south && lat <= BBOX.north && lng >= BBOX.west && lng <= BBOX.east;
 }
 
-const FAST_GEO: PositionOptions = { enableHighAccuracy: false, timeout: 1800, maximumAge: 120_000 };
+const GEO_CACHE_KEY = 'srw:last-here';
+
+const INSTANT_GEO: PositionOptions = { enableHighAccuracy: false, timeout: 350, maximumAge: 3_600_000 };
+const REFINE_GEO: PositionOptions = { enableHighAccuracy: false, timeout: 6000, maximumAge: 15_000 };
 
 let lastHere: [number, number] | null = null;
+const hereListeners = new Set<(coords: [number, number]) => void>();
+
+function readCachedHere(): [number, number] | null {
+  if (lastHere) return lastHere;
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(GEO_CACHE_KEY);
+    if (!raw) return null;
+    const [lat, lng] = JSON.parse(raw) as [number, number];
+    if (!inIndia(lat, lng)) return null;
+    lastHere = [lat, lng];
+    return lastHere;
+  } catch {
+    return null;
+  }
+}
 
 function rememberHere(lat: number, lng: number) {
+  if (!inIndia(lat, lng)) return;
   lastHere = [lat, lng];
+  try {
+    sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify([lat, lng]));
+  } catch {
+    /* quota / private mode */
+  }
+  hereListeners.forEach((fn) => fn(lastHere!));
+}
+
+function applyFix(pos: GeolocationPosition) {
+  rememberHere(pos.coords.latitude, pos.coords.longitude);
+}
+
+function requestHere(onFail?: () => void) {
+  if (!navigator.geolocation) {
+    onFail?.();
+    return;
+  }
+  // Cached fix comes back in milliseconds; a second call keeps the dot fresh.
+  navigator.geolocation.getCurrentPosition(applyFix, () => undefined, INSTANT_GEO);
+  navigator.geolocation.getCurrentPosition(applyFix, () => onFail?.(), REFINE_GEO);
 }
 
 function flyHere(map: L.Map, lat: number, lng: number, duration = 0.45) {
@@ -127,31 +167,37 @@ function youIcon() {
 
 function LiveYou() {
   const map = useMap();
-  const [here, setHere] = useState<[number, number] | null>(null);
+  const [here, setHere] = useState<[number, number] | null>(() => readCachedHere());
   const flew = useRef(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    const cached = readCachedHere();
+    if (cached) setHere(cached);
+
+    const onHere = (coords: [number, number]) => setHere(coords);
+    hereListeners.add(onHere);
+
+    if (!navigator.geolocation) return () => hereListeners.delete(onHere);
+
+    if (cached && !flew.current) {
+      flew.current = true;
+      flyHere(map, cached[0], cached[1], 0.35);
+    }
 
     const onFix = (pos: GeolocationPosition) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      if (!inIndia(lat, lng)) return;
-      rememberHere(lat, lng);
-      setHere([lat, lng]);
+      applyFix(pos);
       if (!flew.current) {
         flew.current = true;
-        flyHere(map, lat, lng, 0.55);
+        flyHere(map, pos.coords.latitude, pos.coords.longitude, cached ? 0.35 : 0.55);
       }
     };
 
-    navigator.geolocation.getCurrentPosition(onFix, () => undefined, FAST_GEO);
-    const watch = navigator.geolocation.watchPosition(onFix, () => undefined, {
-      enableHighAccuracy: false,
-      timeout: 8000,
-      maximumAge: 30_000,
-    });
-    return () => navigator.geolocation.clearWatch(watch);
+    navigator.geolocation.getCurrentPosition(onFix, () => undefined, INSTANT_GEO);
+    const watch = navigator.geolocation.watchPosition(onFix, () => undefined, REFINE_GEO);
+    return () => {
+      hereListeners.delete(onHere);
+      navigator.geolocation.clearWatch(watch);
+    };
   }, [map]);
 
   if (!here) return null;
@@ -231,25 +277,13 @@ function Controls({
   }, [bounds, map, fitKey, insetLeft]);
 
   function locate() {
-    if (lastHere) {
-      flyHere(map, lastHere[0], lastHere[1], 0.4);
+    const cached = readCachedHere();
+    if (cached) {
+      flyHere(map, cached[0], cached[1], 0.3);
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        if (!inIndia(latitude, longitude)) {
-          if (!lastHere) toast.error('You are outside the covered area of India');
-          return;
-        }
-        const already = Boolean(lastHere);
-        rememberHere(latitude, longitude);
-        flyHere(map, latitude, longitude, already ? 0.35 : 0.5);
-      },
-      () => {
-        if (!lastHere) toast.error('Location permission denied');
-      },
-      FAST_GEO,
-    );
+    requestHere(() => {
+      if (!readCachedHere()) toast.error('Location permission denied');
+    });
   }
 
   return (

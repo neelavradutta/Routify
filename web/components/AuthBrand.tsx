@@ -12,7 +12,7 @@ export default function AuthBrand() {
         }}
       />
       <div className="relative">
-        <Logo size={40} wordClass="font-serif text-xl leading-none text-ink" />
+        <Logo size={40} wordClass="font-brand text-xl font-extrabold leading-none tracking-tight text-ink" />
         <h1 className="mt-16 max-w-md font-serif text-[42px] leading-[1.12] text-ink">
           The shortest walk is not always the safest one at night.
         </h1>

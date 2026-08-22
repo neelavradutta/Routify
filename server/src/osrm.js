@@ -1,5 +1,6 @@
-import { crimeAt, haversine, loadCrime } from './graph.js';
+import { haversine, loadCrime } from './graph.js';
 import { segmentScore } from './score.js';
+import { factorsAt, prepareRisk, reasonFor, riskFrom } from './risk.js';
 
 const USER_AGENT = 'SafeRoutesForWomen/1.0 (pedestrian safety routing; contact: local dev)';
 const OSRM = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot';
@@ -8,33 +9,30 @@ function toLatLng(coords) {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-function sampleRisk(coords, night) {
+/** Average of the safety factors along a line, sampled evenly. */
+function sampleRisk(coords, night, context) {
   if (!coords.length) return { safety: 60, crime: 0.2, light: night ? 0.45 : 0.72, isolation: 0.35, camera: 0 };
-  let crime = 0;
   const step = Math.max(1, Math.floor(coords.length / 24));
+  const total = { light: 0, isolation: 0, crime: 0, camera: 0 };
   let n = 0;
   for (let i = 0; i < coords.length; i += step) {
-    crime += crimeAt(coords[i][0], coords[i][1]);
+    const f = factorsAt(coords[i][0], coords[i][1], night, context);
+    total.light += f.light;
+    total.isolation += f.isolation;
+    total.crime += f.crime;
+    total.camera += f.camera;
     n++;
   }
-  crime = Math.min(1, crime / Math.max(1, n));
-  const light = night ? 0.42 : 0.7;
-  const isolation = 0.32 + 0.15 * crime;
-  const camera = 0;
-  const w = night
-    ? { light: 0.38, isolation: 0.3, crime: 0.25, camera: 0.07 }
-    : { light: 0.14, isolation: 0.31, crime: 0.44, camera: 0.11 };
-  const risk = Math.max(
-    0,
-    Math.min(
-      1,
-      w.light * (1 - light) + w.isolation * isolation + w.crime * crime + w.camera * (1 - camera),
-    ),
-  );
-  return { safety: segmentScore(risk), crime, light, isolation, camera };
+  const mean = {
+    light: total.light / n,
+    isolation: total.isolation / n,
+    crime: total.crime / n,
+    camera: total.camera / n,
+  };
+  return { ...mean, safety: segmentScore(riskFrom(mean, night)) };
 }
 
-function segmentsFromLine(coords, night) {
+function segmentsFromLine(coords, night, context) {
   if (coords.length < 2) return [];
   const chunks = [];
   const size = Math.max(8, Math.ceil(coords.length / 12));
@@ -44,24 +42,22 @@ function segmentsFromLine(coords, night) {
     for (let k = 1; k < slice.length; k++) {
       length += haversine(slice[k - 1][0], slice[k - 1][1], slice[k][0], slice[k][1]);
     }
-    const mid = slice[Math.floor(slice.length / 2)];
-    const f = sampleRisk([mid], night);
+    const f = sampleRisk(slice, night, context);
     chunks.push({
       name: null,
       kind: 'footway',
       coords: slice,
       length: Math.round(length),
       score: f.safety,
-      factors: { light: +f.light.toFixed(2), isolation: +f.isolation.toFixed(2), crime: +f.crime.toFixed(2), camera: f.camera },
+      factors: {
+        light: +f.light.toFixed(2),
+        isolation: +f.isolation.toFixed(2),
+        crime: +f.crime.toFixed(2),
+        camera: +f.camera.toFixed(2),
+      },
     });
   }
   return chunks;
-}
-
-function reasonOf(crime, night) {
-  if (crime >= 0.28) return 'crime';
-  if (night) return 'darkness';
-  return 'isolation';
 }
 
 function spaced(zones, minMetres) {
@@ -73,7 +69,11 @@ function spaced(zones, minMetres) {
   return kept;
 }
 
-function zonesAlong(coords, night = false) {
+/**
+ * Weak points to draw on the map: known hotspots the walk passes, plus the places along it
+ * that the model itself scores worst.
+ */
+function zonesAlong(coords, night, context) {
   const fromSeeds = [];
   for (const h of loadCrime()) {
     const hit = coords.some(([lat, lng]) => haversine(lat, lng, h.lat, h.lng) < Math.max(h.radius, 350));
@@ -95,21 +95,14 @@ function zonesAlong(coords, night = false) {
     if (acc < 160 && i !== coords.length - 1) continue;
     acc = 0;
     const [lat, lng] = coords[i];
-    const crime = crimeAt(lat, lng);
-    const light = night ? 0.42 : 0.7;
-    const isolation = 0.32 + 0.2 * crime;
-    const w = night
-      ? { light: 0.38, isolation: 0.3, crime: 0.25 }
-      : { light: 0.14, isolation: 0.31, crime: 0.44 };
-    const risk = Math.min(1, w.light * (1 - light) + w.isolation * isolation + w.crime * crime);
+    const f = factorsAt(lat, lng, night, context);
     samples.push({
       lat,
       lng,
       radius: 170,
-      score: segmentScore(risk),
-      reason: reasonOf(crime, night),
-      name: null,
-      risk,
+      score: segmentScore(riskFrom(f, night)),
+      reason: reasonFor(f, night),
+      name: f.region.place ?? f.region.city ?? null,
     });
   }
 
@@ -119,15 +112,22 @@ function zonesAlong(coords, night = false) {
   return merged.sort((a, b) => a.score - b.score).slice(0, 24);
 }
 
-function packRoute(raw, profile, night) {
+function packRoute(raw, profile, night, context) {
   const coords = toLatLng(raw.geometry.coordinates);
-  const factors = sampleRisk(coords, night);
-  const segs = segmentsFromLine(coords, night);
+  const factors = sampleRisk(coords, night, context);
+  const segs = segmentsFromLine(coords, night, context);
   const weakest = [...segs]
     .filter((s) => s.length > 40)
     .sort((a, b) => a.score - b.score)
     .slice(0, 3)
     .map((s) => ({ name: s.name ?? 'this stretch', score: s.score, length: s.length }));
+
+  const packed = {
+    light: +factors.light.toFixed(2),
+    isolation: +factors.isolation.toFixed(2),
+    crime: +factors.crime.toFixed(2),
+    camera: +factors.camera.toFixed(2),
+  };
 
   return {
     id: profile.id,
@@ -135,28 +135,33 @@ function packRoute(raw, profile, night) {
     distance: Math.round(raw.distance),
     duration: Math.round(raw.duration / 60),
     safety: factors.safety,
-    factors: {
-      light: +factors.light.toFixed(2),
-      isolation: +factors.isolation.toFixed(2),
-      crime: +factors.crime.toFixed(2),
-      camera: factors.camera,
-    },
+    factors: packed,
     weakest,
-    segments: segs.length ? segs : [{
-      name: null,
-      kind: 'footway',
-      coords,
-      length: Math.round(raw.distance),
-      score: factors.safety,
-      factors: {
-        light: +factors.light.toFixed(2),
-        isolation: +factors.isolation.toFixed(2),
-        crime: +factors.crime.toFixed(2),
-        camera: factors.camera,
-      },
-    }],
+    segments: segs.length
+      ? segs
+      : [
+          {
+            name: null,
+            kind: 'footway',
+            coords,
+            length: Math.round(raw.distance),
+            score: factors.safety,
+            factors: packed,
+          },
+        ],
     signature: coords.filter((_, i) => i % 12 === 0).map((p) => p.join(',')).join('|'),
   };
+}
+
+/**
+ * What the user asked to avoid, expressed as points off a route's safety score, so the
+ * filters change which walk is offered instead of only shading the map.
+ */
+export function filterPenalty(route, filters = {}) {
+  let penalty = 0;
+  if (filters.avoidUnlit) penalty += 30 * (1 - route.factors.light);
+  if (filters.avoidIsolated) penalty += 30 * route.factors.isolation;
+  return penalty;
 }
 
 async function fetchOsrm(from, to) {
@@ -176,8 +181,7 @@ async function fetchOsrm(from, to) {
 }
 
 /**
- * Fast India-wide walk routes via public OSRM foot. Safety is scored along the
- * returned line (crime priors + day/night light). Avoids hanging on Overpass.
+ * India-wide walk routes from public OSRM foot, scored with the live safety model.
  */
 export async function planOsrm({ from, to, night, filters }) {
   let raw;
@@ -188,13 +192,19 @@ export async function planOsrm({ from, to, night, filters }) {
     return null;
   }
 
-  const scored = raw.map((r) => packRoute(r, { id: 'tmp', label: 'tmp' }, night));
+  const everyPoint = raw.flatMap((r) => toLatLng(r.geometry.coordinates));
+  const context = await prepareRisk(everyPoint);
+
+  const scored = raw.map((r) => packRoute(r, { id: 'tmp', label: 'tmp' }, night, context));
+  const preference = (route) => route.safety - filterPenalty(route, filters);
   const byTime = [...scored].sort((a, b) => a.duration - b.duration || a.distance - b.distance);
-  const bySafe = [...scored].sort((a, b) => b.safety - a.safety || a.duration - b.duration);
+  const bySafe = [...scored].sort((a, b) => preference(b) - preference(a) || a.duration - b.duration);
 
   const fast = { ...byTime[0], id: 'fast', label: 'Fastest' };
   const safest = { ...bySafe[0], id: 'safest', label: 'Safest' };
-  const mid = scored.find((r) => r.signature !== fast.signature && r.signature !== safest.signature) ?? byTime[Math.min(1, byTime.length - 1)];
+  const mid =
+    scored.find((r) => r.signature !== fast.signature && r.signature !== safest.signature) ??
+    byTime[Math.min(1, byTime.length - 1)];
   const balanced = { ...mid, id: 'balanced', label: 'Balanced' };
 
   const routes = [fast, balanced, safest];
@@ -207,12 +217,12 @@ export async function planOsrm({ from, to, night, filters }) {
   }
 
   const line = routes.flatMap((r) => r.segments.flatMap((s) => s.coords));
-  void filters;
   return {
     routes,
-    zones: zonesAlong(line, night),
+    zones: zonesAlong(line, night, context),
     snapped: { from: 0, to: 0 },
     night,
     filters,
+    evidence: { streetContext: Boolean(context), pointsOfInterest: context?.counts ?? null },
   };
 }

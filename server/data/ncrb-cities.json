@@ -1,0 +1,32 @@
+{
+  "title": "NCRB Crime in India 2024, Table 3B.1 - crime against women in the 19 metropolitan cities",
+  "sources": [
+    {
+      "label": "NCRB Crime in India 2024, Table 3B.1 (metropolitan cities)",
+      "url": "https://data.opencity.in/dataset/crime-in-india-2024",
+      "note": "Rates are per lakh of the 2011 city population, so they run higher than state rates and are normalised separately."
+    }
+  ],
+  "totalCities": { "cases2024": 50584, "rate2024": 93.5 },
+  "cities": [
+    { "name": "Ahmedabad", "state": "Gujarat", "lat": 23.03, "lng": 72.58, "radiusKm": 22, "cases2024": 1059, "rate2024": 35.3 },
+    { "name": "Bengaluru", "state": "Karnataka", "lat": 12.97, "lng": 77.59, "radiusKm": 26, "cases2024": 4748, "rate2024": 117.0 },
+    { "name": "Chennai", "state": "Tamil Nadu", "lat": 13.08, "lng": 80.27, "radiusKm": 24, "cases2024": 1093, "rate2024": 25.4 },
+    { "name": "Coimbatore", "state": "Tamil Nadu", "lat": 11.02, "lng": 76.96, "radiusKm": 16, "cases2024": 377, "rate2024": 35.1 },
+    { "name": "Delhi", "state": "Delhi", "lat": 28.65, "lng": 77.19, "radiusKm": 32, "cases2024": 13396, "rate2024": 176.8 },
+    { "name": "Ghaziabad", "state": "Uttar Pradesh", "lat": 28.67, "lng": 77.43, "radiusKm": 16, "cases2024": 1265, "rate2024": 114.8 },
+    { "name": "Hyderabad", "state": "Telangana", "lat": 17.39, "lng": 78.49, "radiusKm": 26, "cases2024": 3255, "rate2024": 86.5 },
+    { "name": "Indore", "state": "Madhya Pradesh", "lat": 22.72, "lng": 75.86, "radiusKm": 16, "cases2024": 1884, "rate2024": 181.5 },
+    { "name": "Jaipur", "state": "Rajasthan", "lat": 26.91, "lng": 75.79, "radiusKm": 20, "cases2024": 2894, "rate2024": 199.0 },
+    { "name": "Kanpur", "state": "Uttar Pradesh", "lat": 26.45, "lng": 80.33, "radiusKm": 16, "cases2024": 1950, "rate2024": 146.1 },
+    { "name": "Kochi", "state": "Kerala", "lat": 9.93, "lng": 76.27, "radiusKm": 16, "cases2024": 783, "rate2024": 72.8 },
+    { "name": "Kolkata", "state": "West Bengal", "lat": 22.57, "lng": 88.36, "radiusKm": 22, "cases2024": 1958, "rate2024": 28.8 },
+    { "name": "Kozhikode", "state": "Kerala", "lat": 11.26, "lng": 75.78, "radiusKm": 14, "cases2024": 665, "rate2024": 62.5 },
+    { "name": "Lucknow", "state": "Uttar Pradesh", "lat": 26.85, "lng": 80.95, "radiusKm": 18, "cases2024": 2571, "rate2024": 186.0 },
+    { "name": "Mumbai", "state": "Maharashtra", "lat": 19.08, "lng": 72.88, "radiusKm": 26, "cases2024": 6358, "rate2024": 74.6 },
+    { "name": "Nagpur", "state": "Maharashtra", "lat": 21.15, "lng": 79.09, "radiusKm": 16, "cases2024": 1513, "rate2024": 123.8 },
+    { "name": "Patna", "state": "Bihar", "lat": 25.61, "lng": 85.14, "radiusKm": 16, "cases2024": 1239, "rate2024": 129.2 },
+    { "name": "Pune", "state": "Maharashtra", "lat": 18.52, "lng": 73.86, "radiusKm": 22, "cases2024": 2631, "rate2024": 110.1 },
+    { "name": "Surat", "state": "Gujarat", "lat": 21.17, "lng": 72.83, "radiusKm": 18, "cases2024": 945, "rate2024": 47.9 }
+  ]
+}
