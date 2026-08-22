@@ -9,7 +9,8 @@ const tmp = mkdtempSync(join(tmpdir(), 'srw-auth-'));
 process.env.AUTH_DB_PATH = join(tmp, 'users.sqlite');
 process.env.NODE_ENV = 'test';
 
-const { authRouter, requireAuth, resetAuthDbForTests } = await import('../src/auth.js');
+const { authRouter, requireAuth, resetAuthDbForTests, initAuth } = await import('../src/auth.js');
+await initAuth();
 
 const app = express();
 app.use(express.json());

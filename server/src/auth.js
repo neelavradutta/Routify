@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import Database from 'better-sqlite3';
-import { mkdirSync, unlinkSync } from 'node:fs';
+import initSqlJs from 'sql.js';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import bcrypt from 'bcryptjs';
@@ -25,18 +25,56 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const dbPath = process.env.AUTH_DB_PATH || join(dataDir, 'users.sqlite');
-const db = new Database(dbPath);
-db.exec(`CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  password_hash TEXT NOT NULL,
-  full_name TEXT,
-  created_at TEXT NOT NULL
-)`);
-try {
-  db.exec('ALTER TABLE users ADD COLUMN full_name TEXT');
-} catch {
-  /* column already exists */
+const wasmPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm');
+
+/** In-memory SQLite via WASM — no native bindings, safe on Render/Linux. */
+let db = null;
+
+function persist() {
+  writeFileSync(dbPath, Buffer.from(db.export()));
+}
+
+function queryGet(sql, params = []) {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  if (!stmt.step()) {
+    stmt.free();
+    return null;
+  }
+  const row = stmt.getAsObject();
+  stmt.free();
+  return row;
+}
+
+function lastId() {
+  const out = db.exec('SELECT last_insert_rowid() AS id');
+  return Number(out[0]?.values[0]?.[0] ?? 0);
+}
+
+function queryRun(sql, params = []) {
+  db.run(sql, params);
+  const id = lastId();
+  persist();
+  return { lastInsertRowid: id };
+}
+
+export async function initAuth() {
+  const SQL = await initSqlJs({ locateFile: () => wasmPath });
+  db = existsSync(dbPath) ? new SQL.Database(readFileSync(dbPath)) : new SQL.Database();
+
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    full_name TEXT,
+    created_at TEXT NOT NULL
+  )`);
+  try {
+    db.run('ALTER TABLE users ADD COLUMN full_name TEXT');
+  } catch {
+    /* column already exists */
+  }
+  persist();
 }
 
 const DUMMY_HASH = bcrypt.hashSync('invalid-password-timing-pad', 10);
@@ -59,7 +97,7 @@ const sign = (user) =>
   jwt.sign({ sub: user.id, email: user.email, name: user.fullName ?? null }, secret, JWT_OPTS);
 
 function loadUser(id) {
-  return db.prepare('SELECT id, email, full_name FROM users WHERE id = ?').get(id);
+  return queryGet('SELECT id, email, full_name FROM users WHERE id = ?', [id]);
 }
 
 export function requireAuth(req, res, next) {
@@ -108,18 +146,15 @@ authRouter.post('/register', authBurst, async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
 
   try {
-    const info = db
-      .prepare('INSERT INTO users (email, password_hash, full_name, created_at) VALUES (?, ?, ?, ?)')
-      .run(email, hash, fullName, new Date().toISOString());
+    const info = queryRun(
+      'INSERT INTO users (email, password_hash, full_name, created_at) VALUES (?, ?, ?, ?)',
+      [email, hash, fullName, new Date().toISOString()],
+    );
 
-    const user = { id: Number(info.lastInsertRowid), email, fullName };
+    const user = { id: info.lastInsertRowid, email, fullName };
     res.status(201).json({ token: sign(user), user });
   } catch (err) {
-    const dup =
-      err?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
-      err?.errcode === 2067 ||
-      String(err?.message ?? '').includes('UNIQUE constraint');
-    if (dup) {
+    if (String(err?.message ?? '').includes('UNIQUE constraint')) {
       return res.status(409).json({ error: 'That email is already registered' });
     }
     throw err;
@@ -131,7 +166,7 @@ authRouter.post('/login', authBurst, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
 
   const { email, password } = parsed.data;
-  const row = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const row = queryGet('SELECT * FROM users WHERE email = ?', [email]);
   const ok = await bcrypt.compare(password, row?.password_hash ?? DUMMY_HASH);
   if (!row || !ok) {
     return res.status(401).json({ error: 'Email or password is incorrect' });
@@ -149,7 +184,10 @@ authRouter.get('/me', requireAuth, (req, res) => {
 
 /** Test helper — wipes the auth database file. */
 export function resetAuthDbForTests() {
-  db.close();
+  if (db) {
+    db.close();
+    db = null;
+  }
   try {
     unlinkSync(dbPath);
   } catch {

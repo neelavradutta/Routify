@@ -5,7 +5,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
-import { authRouter, requireAuth } from './auth.js';
+import { authRouter, requireAuth, initAuth } from './auth.js';
 import { geocodeRouter } from './geocode.js';
 import { planRoutes } from './route.js';
 import { explainPlan } from './explain.js';
@@ -106,6 +106,8 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
+
+await initAuth();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Safe Routes API on port ${PORT} (origin allowed: ${WEB_ORIGIN})`);
