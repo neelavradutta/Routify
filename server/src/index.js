@@ -10,7 +10,6 @@ import { geocodeRouter } from './geocode.js';
 import { planRoutes } from './route.js';
 import { explainPlan } from './explain.js';
 import { loadCrime } from './graph.js';
-import { crimeStats } from './regions.js';
 import { coverageBbox } from './corridor.js';
 
 const app = express();
@@ -71,18 +70,27 @@ async function plan(req, res) {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({
+  // Keep this fast — Render health checks time out after 5 seconds.
+  res.status(200).json({
     ok: true,
-    coverage: coverageBbox(),
-    mode: 'india-corridors',
-    hotspots: loadCrime().length,
-    crimeData: crimeStats(),
     auth: process.env.DATABASE_URL ? 'postgres' : 'sqlite-file',
   });
 });
 
 app.get('/api/area', (_req, res) => {
   res.json({ bbox: coverageBbox(), hotspots: loadCrime().length });
+});
+
+/** Auth DB + sql.js WASM can take several seconds on cold start — do not block listen. */
+const authReady = initAuth().catch((err) => {
+  console.error('Auth init failed:', err);
+  process.exit(1);
+});
+
+app.use(async (req, res, next) => {
+  if (req.path === '/api/health') return next();
+  await authReady;
+  next();
 });
 
 app.use('/api/auth', limit(30), authRouter);
@@ -108,8 +116,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
-await initAuth();
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Safe Routes API on port ${PORT} (origin allowed: ${WEB_ORIGIN})`);
 });
+
+authReady.then(() => console.log('Auth store ready'));

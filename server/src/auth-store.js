@@ -33,6 +33,8 @@ async function initPg(url) {
   const pool = new Pool({
     connectionString: url,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 8000,
+    max: 4,
   });
 
   await pool.query(`CREATE TABLE IF NOT EXISTS users (
