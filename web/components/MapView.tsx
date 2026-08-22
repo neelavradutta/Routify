@@ -247,7 +247,6 @@ export default function MapView() {
 
   const active = plan?.routes.find((r) => r.id === selected) ?? null;
   const others = plan?.routes.filter((r) => r.id !== selected) ?? [];
-  const selectedRoute = plan?.routes.find((r) => r.id === selected);
 
   const bounds = useMemo<L.LatLngBoundsExpression | null>(() => {
     if (active) return routePoints(active) as L.LatLngBoundsExpression;
@@ -269,6 +268,7 @@ export default function MapView() {
         zoom={13}
         minZoom={11}
         zoomControl={false}
+        attributionControl={false}
         zoomAnimation
         fadeAnimation
         markerZoomAnimation
@@ -287,12 +287,20 @@ export default function MapView() {
         <Controls bounds={bounds} insetLeft={Boolean(plan)} fitKey={active?.id ?? 'pins'} />
 
         {showZones &&
-          plan?.zones.slice(0, 18).map((zone, i) => (
+          plan?.zones.slice(0, 24).map((zone, i) => (
             <Circle
               key={`zone-${i}`}
               center={[zone.lat, zone.lng]}
               radius={zone.radius}
-              pathOptions={{ color: '#FB7185', weight: 1, opacity: 0.28, fillColor: '#FB7185', fillOpacity: 0.07 }}
+              pathOptions={{
+                color: '#E11D48',
+                weight: 0,
+                opacity: 0,
+                fillColor: '#E11D48',
+                fillOpacity: 0.32,
+                stroke: false,
+                className: 'unsafe-zone',
+              }}
             >
               <Tooltip direction="top" opacity={1}>
                 <span className="font-medium">{ZONE_LABEL[zone.reason]}</span>
@@ -360,37 +368,20 @@ export default function MapView() {
           <button
             type="button"
             onClick={() => setPick('from')}
-            className={`chip ${pick === 'from' ? 'border-lime-400 bg-lime-50 text-lime-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
+            className={`chip ${pick === 'from' ? 'border-violet-700 bg-violet-50 text-violet-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
           >
-            <span className="h-2 w-2 rounded-full bg-lime-500" />
-            {from?.label ?? 'Start unset'}
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#5B21B6' }} />
+            Start - {from?.label ?? 'unset'}
           </button>
           <button
             type="button"
             onClick={() => setPick('to')}
-            className={`chip ${pick === 'to' ? 'border-rose-300 bg-rose-50 text-rose-800' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
+            className={`chip ${pick === 'to' ? 'border-red-600 bg-red-50 text-red-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
           >
-            <span className="h-2 w-2 rounded-full bg-rose-500" />
-            {to?.label ?? 'Destination unset'}
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#DC2626' }} />
+            Destination - {to?.label ?? 'unset'}
           </button>
         </div>
-
-        {selectedRoute && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`pointer-events-none rounded-xl border px-3 py-2 shadow-panel backdrop-blur-sm ${
-              mapDark ? 'border-white/10 bg-zinc-900/85' : 'border-slate-200 bg-white/95'
-            }`}
-          >
-            <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${mapDark ? 'text-zinc-400' : 'text-slate-500'}`}>
-              {selectedRoute.label}
-            </p>
-            <p className={`mt-0.5 text-sm font-semibold tabular-nums ${mapDark ? 'text-white' : 'text-lime-800'}`}>
-              {selectedRoute.safety}/100
-            </p>
-          </motion.div>
-        )}
       </div>
     </div>
   );

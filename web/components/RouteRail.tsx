@@ -389,6 +389,10 @@ export default function RouteRail() {
                   </button>
                 </div>
                 <ul className="space-y-2 text-xs text-muted">
+                  <li className="flex items-center gap-2 text-[12px] font-medium text-ink">
+                    <span className="h-3 w-3 rounded-full border border-rose-400 bg-rose-400/35" />
+                    Flagged unsafe zones
+                  </li>
                   {[
                     { color: SCORE_COLORS.good, text: '72 and above' },
                     { color: SCORE_COLORS.fair, text: '55 to 71' },
@@ -399,10 +403,6 @@ export default function RouteRail() {
                       {item.text}
                     </li>
                   ))}
-                  <li className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full border border-clay/50 bg-clay/15" />
-                    Flagged unsafe zones
-                  </li>
                 </ul>
               </div>
 

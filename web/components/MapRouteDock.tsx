@@ -80,7 +80,7 @@ function Comparison({
       </div>
       <div className="mt-1 flex items-center justify-center gap-3 text-[10px] text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-1.5 w-3 rounded-sm bg-orange-500" />
+          <span className="h-1.5 w-3 rounded-sm" style={{ backgroundColor: SCORE_COLORS.poor }} />
           Safety
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -150,7 +150,7 @@ export default function MapRouteDock() {
               >
                 <div className="mb-1 flex items-end justify-between gap-2">
                   <p className="font-serif text-[13px] leading-tight text-ink">Safety against time</p>
-                  <p className="shrink-0 text-[10px] text-muted">{plan.zones.length} flagged zones</p>
+                  <p className="shrink-0 text-[10px] font-medium text-rose-700">{plan.zones.length} flagged unsafe</p>
                 </div>
                 <Comparison routes={plan.routes} />
               </motion.div>
