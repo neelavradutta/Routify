@@ -1,4 +1,5 @@
-import { loadGraph, snap, haversine, inBbox, sameWalkNetwork } from './graph.js';
+import { haversine, inBbox } from './graph.js';
+import { planOsrm } from './osrm.js';
 import {
   PROFILES,
   buildCostTable,
@@ -253,40 +254,8 @@ function unsafeZones(graph, table, routes, night) {
   return zones.sort((a, b) => a.score - b.score).slice(0, 45);
 }
 
-export function planRoutes({ from, to, night, filters }) {
-  const graph = loadGraph();
-
-  if (!inBbox(graph.bbox, from.lat, from.lng)) return { error: 'START_OUT_OF_AREA' };
-  if (!inBbox(graph.bbox, to.lat, to.lng)) return { error: 'END_OUT_OF_AREA' };
-
-  const start = snap(graph, from.lat, from.lng);
-  const goal = snap(graph, to.lat, to.lng);
-  if (!start || !goal) return { error: 'NO_WALKABLE_START' };
-  if (start.node === goal.node) return { error: 'TOO_CLOSE' };
-  if (!sameWalkNetwork(graph, start.node, goal.node)) return { error: 'DISCONNECTED' };
-
-  const table = buildCostTable(graph, night, filters);
-  const routes = [];
-  for (const profile of [PROFILES.fast, PROFILES.balanced, PROFILES.safest]) {
-    const path = search(graph, table, profile, start.node, goal.node);
-    if (!path) continue;
-    routes.push(assemble(graph, table, path, profile, night));
-  }
-  if (!routes.length) return { error: 'NO_ROUTE' };
-
-  const seen = new Map();
-  for (const route of routes) {
-    const first = seen.get(route.signature);
-    route.duplicateOf = first ?? null;
-    if (!first) seen.set(route.signature, route.id);
-    delete route.signature;
-  }
-
-  return {
-    routes,
-    zones: unsafeZones(graph, table, routes, night),
-    snapped: { from: Math.round(start.distance), to: Math.round(goal.distance) },
-    night,
-    filters,
-  };
+export async function planRoutes({ from, to, night, filters }) {
+  const osrm = await planOsrm({ from, to, night, filters });
+  if (osrm?.routes?.length) return osrm;
+  return { error: 'GRAPH_FETCH' };
 }

@@ -26,10 +26,16 @@ const ROUTE_PAINT: Record<string, { fill: string; selected: string }> = {
   safest: { fill: '#0F766E', selected: 'border-teal-300 bg-teal-50 shadow-panel' },
 };
 
+const ROUTE_TAG: Record<string, string> = {
+  safest: 'Safest option',
+  balanced: 'Balanced option',
+  fast: 'Quickest option',
+};
+
 const FACTORS = [
   { key: 'light', label: 'Lit', color: '#0284C7' },
   { key: 'camera', label: 'Cameras', color: '#4D7C0F' },
-  { key: 'isolation', label: 'Isolation', color: '#92400E' },
+  { key: 'isolation', label: '~10/day', color: '#92400E' },
   { key: 'crime', label: 'Crime', color: '#EC4899' },
 ] as const;
 
@@ -65,7 +71,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
             <p className="text-[14px] font-bold leading-tight tracking-tight text-ink">{name}</p>
             <p className="mt-0.5 text-[11px] text-muted">
               {extraMinutes === 0 && extraMetres === 0
-                ? 'Quickest option'
+                ? (ROUTE_TAG[route.id] ?? route.label)
                 : `+${extraMinutes} min · +${formatDistance(Math.max(0, extraMetres))}`}
             </p>
           </div>

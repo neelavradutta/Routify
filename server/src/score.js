@@ -21,7 +21,7 @@ export const PROFILES = {
 
 /**
  * How likely the walking surface is pinched or obstructed: stairs, dirt tracks, service
- * lanes with parked vehicles, and unwatched footways that get encroached in Delhi.
+ * lanes with parked vehicles, and unwatched footways that get encroached in Indian cities.
  */
 const BLOCKED_PRIOR = {
   steps: 0.85,
@@ -38,23 +38,54 @@ const BLOCKED_PRIOR = {
 const saturate = (value, scale) => 1 - Math.exp(-value / scale);
 const clamp01 = (n) => Math.max(0, Math.min(1, n));
 
-/** 1 = well lit. OSM lamp coverage in Delhi is patchy, so road class acts as a prior. */
+/** Typical daily walkers on this kind of street. Path/track ≈ 10 people — the isolation bar. */
+const DAILY_BY_CLASS = {
+  primary: 3500,
+  primary_link: 2800,
+  secondary: 2200,
+  secondary_link: 1800,
+  tertiary: 900,
+  tertiary_link: 700,
+  residential: 220,
+  living_street: 160,
+  unclassified: 90,
+  pedestrian: 700,
+  service: 28,
+  footway: 18,
+  steps: 12,
+  path: 10,
+  track: 8,
+};
+
+export const QUIET_VISITS_PER_DAY = 10;
+
+/** Estimated people on this edge in a day. Night is ~1/5 of daytime footfall. */
+export function dailyVisits(edge, night = false) {
+  const base = DAILY_BY_CLASS[edge.cls] ?? 80;
+  const fromPoi = 1 + 1.6 * saturate(edge.poi ?? 0, 4);
+  let visits = base * fromPoi;
+  if (night) visits *= 0.2;
+  return visits;
+}
+
+export function isolationFromVisits(visits) {
+  return clamp01(1 - visits / (visits + QUIET_VISITS_PER_DAY));
+}
+
+export function isIsolatedPlace(visits) {
+  return visits <= QUIET_VISITS_PER_DAY * 1.3;
+}
+
+/** 1 = about 10 people a day or fewer. Busy roads and shop streets sit near 0. */
+export function isolationScore(edge, night = false) {
+  return isolationFromVisits(dailyVisits(edge, night));
+}
 export function lightScore(edge) {
   if (edge.lit === 0) return 0.08;
   const fromLamps = saturate(edge.lamp, 2);
   const prior = 0.45 * edge.exp;
   const base = Math.max(fromLamps, prior);
   return edge.lit === 1 ? Math.max(0.75, base) : clamp01(base);
-}
-
-/** 1 = nobody around: few shops or amenities and a road class that carries little footfall. */
-export function isolationScore(edge, night = false) {
-  const activity = saturate(edge.poi, 4);
-  let score = clamp01(1 - (0.6 * activity + 0.4 * edge.exp));
-  if (night && (edge.cls === 'footway' || edge.cls === 'path' || edge.cls === 'steps' || edge.cls === 'service')) {
-    score = clamp01(score + 0.18);
-  }
-  return score;
 }
 
 /** 1 = busy corridor: main-road class plus shops and amenities feeding it. */
@@ -99,7 +130,7 @@ export function edgeRisk(edge, night) {
 export function filterMultiplier(edge, filters, night = false) {
   let multiplier = 1;
   if (filters.avoidUnlit && lightScore(edge) < 0.4) multiplier *= 4;
-  if (filters.avoidIsolated && isolationScore(edge, night) > 0.6) multiplier *= 4;
+  if (filters.avoidIsolated && isolationScore(edge, night) >= 0.5) multiplier *= 4;
   return multiplier;
 }
 

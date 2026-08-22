@@ -79,7 +79,7 @@ function template(f) {
   return lines.slice(0, 5).join('\n');
 }
 
-const SYSTEM_PROMPT = `You explain a walking route to a normal person in Delhi. They are not an engineer.
+const SYSTEM_PROMPT = `You explain a walking route to a normal person in an Indian city. They are not an engineer.
 Rules:
 - Use only the numbers in the JSON. Never invent streets, incidents or news.
 - Write exactly 5 very short bullet lines. Never more. One idea per line. Simple everyday English.

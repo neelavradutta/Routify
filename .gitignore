@@ -9,3 +9,4 @@ next-env.d.ts
 server/data/graph.json
 server/data/users.sqlite
 server/data/.cache/
+server/data/tiles/

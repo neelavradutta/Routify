@@ -16,8 +16,8 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: 'Routify — safer walking in Delhi',
-  description: 'Pick a faster, mixed, or safer walk through central Delhi.',
+  title: 'Routify — safer walking in India',
+  description: 'Pick a faster, mixed, or safer walk through Indian cities.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
@@ -13,8 +13,8 @@ import MapRouteDock from '@/components/MapRouteDock';
 const ROUTE_RED = '#DC2626';
 const ROUTE_RED_GHOST = '#F87171';
 
-const CENTER: [number, number] = [28.6139, 77.2295];
-const BBOX = { south: 28.55, west: 77.15, north: 28.68, east: 77.28 };
+const CENTER: [number, number] = [22.9734, 78.6569];
+const BBOX = { south: 6.5, west: 68.0, north: 37.1, east: 97.5 };
 const DRAW_MS = 3400;
 
 const DOCK_PAD = 16 + 352 + 40;
@@ -67,9 +67,102 @@ function pinIcon(kind: 'from' | 'to') {
 
 const ZONE_LABEL: Record<string, string> = {
   darkness: 'Poorly lit',
-  isolation: 'Isolated',
+  isolation: 'Few people (~10 a day)',
   crime: 'Higher reported risk',
 };
+
+function FollowPins() {
+  const map = useMap();
+  const { from, to, plan } = useApp();
+  const last = useRef('');
+  const skipFirst = useRef(true);
+
+  useEffect(() => {
+    const key = `${from?.lat},${from?.lng}|${to?.lat},${to?.lng}`;
+    if (skipFirst.current) {
+      skipFirst.current = false;
+      last.current = key;
+      return;
+    }
+    if (plan) return;
+    if (key === last.current) return;
+    last.current = key;
+
+    if (from && to) {
+      fitMap(map, [[from.lat, from.lng], [to.lat, to.lng]], false);
+      return;
+    }
+    const one = from ?? to;
+    if (!one) return;
+    map.flyTo([one.lat, one.lng], Math.max(map.getZoom(), 15), { duration: 0.85, easeLinearity: 0.22 });
+  }, [from, to, plan, map]);
+
+  return null;
+}
+
+function inIndia(lat: number, lng: number) {
+  return lat >= BBOX.south && lat <= BBOX.north && lng >= BBOX.west && lng <= BBOX.east;
+}
+
+const FAST_GEO: PositionOptions = { enableHighAccuracy: false, timeout: 1800, maximumAge: 120_000 };
+
+let lastHere: [number, number] | null = null;
+
+function rememberHere(lat: number, lng: number) {
+  lastHere = [lat, lng];
+}
+
+function flyHere(map: L.Map, lat: number, lng: number, duration = 0.45) {
+  map.flyTo([lat, lng], 16, { duration, easeLinearity: 0.22 });
+}
+
+function youIcon() {
+  return L.divIcon({
+    className: 'you-mark',
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    html: '<span class="you-ring"></span><span class="you-core"></span>',
+  });
+}
+
+function LiveYou() {
+  const map = useMap();
+  const [here, setHere] = useState<[number, number] | null>(null);
+  const flew = useRef(false);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    const onFix = (pos: GeolocationPosition) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      if (!inIndia(lat, lng)) return;
+      rememberHere(lat, lng);
+      setHere([lat, lng]);
+      if (!flew.current) {
+        flew.current = true;
+        flyHere(map, lat, lng, 0.55);
+      }
+    };
+
+    navigator.geolocation.getCurrentPosition(onFix, () => undefined, FAST_GEO);
+    const watch = navigator.geolocation.watchPosition(onFix, () => undefined, {
+      enableHighAccuracy: false,
+      timeout: 8000,
+      maximumAge: 30_000,
+    });
+    return () => navigator.geolocation.clearWatch(watch);
+  }, [map]);
+
+  if (!here) return null;
+  return (
+    <Marker position={here} icon={youIcon()} zIndexOffset={800} interactive={false}>
+      <Tooltip direction="top" opacity={1} permanent={false}>
+        You are here
+      </Tooltip>
+    </Marker>
+  );
+}
 
 function SizeFixer() {
   const map = useMap();
@@ -98,7 +191,7 @@ function ClickToPick() {
         const { result } = await api.reverse(token, +lat.toFixed(5), +lng.toFixed(5));
         setPlace(pick, result);
       } catch {
-        toast.error('That point is outside the covered area');
+        toast.error('That point is outside India');
       }
     },
   });
@@ -138,16 +231,24 @@ function Controls({
   }, [bounds, map, fitKey, insetLeft]);
 
   function locate() {
+    if (lastHere) {
+      flyHere(map, lastHere[0], lastHere[1], 0.4);
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        if (latitude < BBOX.south || latitude > BBOX.north || longitude < BBOX.west || longitude > BBOX.east) {
-          toast.error('You are outside the covered area of central Delhi');
+        if (!inIndia(latitude, longitude)) {
+          if (!lastHere) toast.error('You are outside the covered area of India');
           return;
         }
-        map.flyTo([latitude, longitude], 16, { duration: 1.05, easeLinearity: 0.22 });
+        const already = Boolean(lastHere);
+        rememberHere(latitude, longitude);
+        flyHere(map, latitude, longitude, already ? 0.35 : 0.5);
       },
-      () => toast.error('Location permission denied'),
+      () => {
+        if (!lastHere) toast.error('Location permission denied');
+      },
+      FAST_GEO,
     );
   }
 
@@ -268,7 +369,8 @@ function TraceRoute({
 }
 
 export default function MapView() {
-  const { from, to, plan, selected, hover, showZones, pick, setPick, mapDark } = useApp();
+  const { from, to, plan, selected, hover, avoidUnlit, avoidIsolated, pick, setPick, mapDark } = useApp();
+  const showZones = avoidUnlit || avoidIsolated;
 
   const active = plan?.routes.find((r) => r.id === selected) ?? null;
   const others = plan?.routes.filter((r) => r.id !== selected) ?? [];
@@ -289,8 +391,8 @@ export default function MapView() {
     <div className="relative h-full w-full overflow-hidden">
       <MapContainer
         center={CENTER}
-        zoom={13}
-        minZoom={11}
+        zoom={5}
+        minZoom={4}
         zoomControl={false}
         attributionControl={false}
         zoomAnimation
@@ -300,13 +402,15 @@ export default function MapView() {
         className="absolute inset-0 h-full w-full map-day"
 
         maxBounds={[
-          [BBOX.south - 0.05, BBOX.west - 0.05],
-          [BBOX.north + 0.05, BBOX.east + 0.05],
+          [BBOX.south - 1, BBOX.west - 1],
+          [BBOX.north + 1, BBOX.east + 1],
         ]}
       >
         <Basemap dark={false} />
 
         <SizeFixer />
+        <LiveYou />
+        <FollowPins />
         <ClickToPick />
         <Controls bounds={bounds} insetLeft={Boolean(plan)} fitKey={active?.id ?? 'pins'} />
 

@@ -1,12 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { loadGraph, inBbox } from './graph.js';
+import { inBbox } from './graph.js';
+import { coverageBbox } from './corridor.js';
 
 const USER_AGENT = 'SafeRoutesForWomen/1.0 (pedestrian safety routing; contact: local dev)';
 const BASE = 'https://nominatim.openstreetmap.org';
 
-// Nominatim asks for at most one request per second and no hammering; a small LRU plus
-// a serialised queue keeps this project a good citizen.
 const cache = new Map();
 const MAX_CACHE = 200;
 let queue = Promise.resolve();
@@ -43,13 +42,12 @@ geocodeRouter.get('/search', async (req, res) => {
   const parsed = searchQuery.safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ error: 'Type at least 3 characters' });
 
-  const { bbox } = loadGraph();
+  const bbox = coverageBbox();
   const key = `s:${parsed.data.q.toLowerCase()}`;
   if (cache.has(key)) return res.json({ results: cache.get(key) });
 
   const url =
-    `${BASE}/search?format=jsonv2&limit=6&addressdetails=0&countrycodes=in&bounded=1` +
-    `&viewbox=${bbox.west},${bbox.north},${bbox.east},${bbox.south}` +
+    `${BASE}/search?format=jsonv2&limit=6&addressdetails=0&countrycodes=in` +
     `&q=${encodeURIComponent(parsed.data.q)}`;
 
   try {
@@ -70,8 +68,8 @@ geocodeRouter.get('/reverse', async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Invalid coordinates' });
 
   const { lat, lng } = parsed.data;
-  const { bbox } = loadGraph();
-  if (!inBbox(bbox, lat, lng)) return res.status(400).json({ error: 'Point is outside the covered area' });
+  const bbox = coverageBbox();
+  if (!inBbox(bbox, lat, lng)) return res.status(400).json({ error: 'Point is outside India' });
 
   const key = `r:${lat.toFixed(4)},${lng.toFixed(4)}`;
   if (cache.has(key)) return res.json({ result: cache.get(key) });

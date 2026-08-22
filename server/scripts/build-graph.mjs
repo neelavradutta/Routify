@@ -1,6 +1,6 @@
 /**
- * One-off builder: pulls the central-Delhi pedestrian network and its safety signals from
- * OpenStreetMap (Overpass) and writes data/graph.json. Never runs during a request.
+ * Optional city pack: pulls a pedestrian network from Overpass into data/graph.json.
+ * Live routing for India does not need this — corridors fetch OSM tiles on demand.
  *
  *   npm run build:graph
  */
@@ -12,8 +12,9 @@ import { haversine, GridIndex } from '../src/graph.js';
 
 const dataDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'data');
 
-const BBOX = { south: 28.55, west: 77.15, north: 28.68, east: 77.28 };
-const TILES = 4;
+/** National Capital Territory of Delhi — full urban extent, not just central Delhi. */
+const BBOX = { south: 28.4, west: 76.84, north: 28.88, east: 77.35 };
+const TILES = 12;
 
 const ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',

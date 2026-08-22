@@ -24,7 +24,6 @@ type State = {
   plan: Plan | null;
   selected: Route['id'];
   hovered: number | null;
-  showZones: boolean;
 
   explanation: { text: string; source: 'ai' | 'rules' } | null;
   planning: boolean;
@@ -44,7 +43,7 @@ type State = {
   setPlace: (which: Endpoint, place: Place | null) => void;
   swap: () => void;
   setPick: (which: Endpoint) => void;
-  toggle: (key: 'night' | 'avoidUnlit' | 'avoidIsolated' | 'showZones') => void;
+  toggle: (key: 'night' | 'avoidUnlit' | 'avoidIsolated') => void;
   toggleMap: () => void;
   select: (id: Route['id']) => void;
   hover: (index: number | null) => void;
@@ -76,7 +75,6 @@ export const useApp = create<State>()(
       plan: null,
       selected: 'safest',
       hovered: null,
-      showZones: true,
 
       explanation: null,
       planning: false,

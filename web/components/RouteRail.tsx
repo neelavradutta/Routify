@@ -124,7 +124,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
             if (results.length) setOpen(true);
           }}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={isStart ? 'Connaught Place' : 'Khan Market'}
+          placeholder={isStart ? 'Search any place in India' : 'Search destination in India'}
           className={`field pl-12 pr-9 ${active ? 'border-slate-400' : ''}`}
           autoComplete="off"
         />
@@ -205,7 +205,7 @@ export default function RouteRail() {
         </motion.button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto px-5 py-5">
+      <div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-slate-50 px-5 py-5">
         <section>
           <div className="relative">
             <PlaceField which="from" />

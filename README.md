@@ -1,11 +1,11 @@
 # Safe Routes for Women
 
-Safety-weighted pedestrian navigation for central Delhi. The router does not treat safety as a
+Safety-weighted pedestrian navigation for India. The router does not treat safety as a
 map overlay: lighting, isolation, camera coverage and area crime priors are folded into the cost
 of every street segment, so distance, time and safety are traded off inside the search itself.
 
-Coverage area: `28.55–28.68 N, 77.15–77.28 E` (Connaught Place, India Gate, Khan Market, Lodi,
-Mandi House, ITO, Karol Bagh, Chanakyapuri).
+Coverage: India (`6.5–37.1 N, 68.0–97.5 E`). Any walking distance: the router loads OSM
+tiles along the path (cached in `server/data/tiles/`). First long walk can take a while.
 
 ## What it does
 
@@ -26,13 +26,11 @@ Two processes: the Express API on `:4000` and the Next.js app on `:3000`.
 cd server
 npm install
 cp .env.example .env          # set JWT_SECRET, optionally OPENAI_API_KEY
-npm run build:graph           # one-off, ~10 min: downloads the walk graph from Overpass
 npm run dev
 ```
 
-`npm run build:graph` writes `data/graph.json`. It caches each Overpass tile in
-`data/.cache/`, so if a run is interrupted by rate limiting you can simply run it again and it
-picks up where it stopped.
+First route in a new neighbourhood hits OpenStreetMap (Overpass) and may take 10–30 s.
+After that the corridor is cached in `server/data/tiles/` and later walks there are fast.
 
 ### 2. Web
 
@@ -79,12 +77,10 @@ A segment's displayed score is `100 × (1 − risk)`; a route's score is its len
   contributors, ODbL.
 - **Basemap**: CARTO Voyager tiles.
 - **Geocoding**: Nominatim, throttled to one request per second and cached server-side.
-- **Crime**: `server/data/crime.geojson` holds neighbourhood-level risk priors for the demo bbox,
-  approximated from published Delhi Police district and station aggregates for crimes against
-  women. They are area priors, not street-level incident reports, and they are deliberately kept
-  in an editable file so they can be replaced with an official feed.
+- **Crime**: `server/data/crime.geojson` holds optional neighbourhood priors (metros seeded).
+  Streets with no nearby seed still route; crime factor stays low. Lighting and activity come from OSM.
 
-Street lamp coverage in OpenStreetMap is uneven across Delhi, so lighting falls back to a road
+Street lamp coverage in OpenStreetMap is uneven, so lighting falls back to a road
 class prior where no lamps are mapped. Scores describe streets, not people, and are estimates
 rather than guarantees.
 
@@ -93,7 +89,10 @@ rather than guarantees.
 ```
 server/
   src/index.js        Express app, validation, rate limits
-  src/graph.js        graph loading, spatial index, snapping
+  src/corridor.js      India bbox, OSM tile cache, on-demand walk graph
+  src/walkBuild.js     OSM ways → compact graph
+  src/overpass.js      Overpass queue
+  src/graph.js         hydrate graph, spatial index, snapping
   src/score.js        safety signals, weights, filters, edge cost
   src/route.js        A*, segment assembly, unsafe zone clustering
   src/auth.js         register / login / me (JWT + bcrypt + SQLite)

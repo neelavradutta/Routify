@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -67,30 +67,33 @@ export class GridIndex {
   }
 }
 
-let cache = null;
+let crimeCache = null;
+let graphFileCache = null;
 
-/**
- * Loads the prebuilt walk graph once and derives adjacency plus a node index for snapping.
- * Edge crime exposure is computed here (not at build time) so the seed file stays editable.
- */
-export function loadGraph() {
-  if (cache) return cache;
-
-  const raw = JSON.parse(readFileSync(join(dataDir, 'graph.json'), 'utf8'));
+export function loadCrime() {
+  if (crimeCache) return crimeCache;
   const crime = JSON.parse(readFileSync(join(dataDir, 'crime.geojson'), 'utf8'));
-
-  const nodes = [];
-  for (let i = 0; i < raw.nodes.length; i += 2) {
-    nodes.push({ lat: raw.nodes[i], lng: raw.nodes[i + 1] });
-  }
-
-  const hotspots = crime.features.map((f) => ({
+  crimeCache = crime.features.map((f) => ({
     lat: f.geometry.coordinates[1],
     lng: f.geometry.coordinates[0],
     name: f.properties.name,
     weight: f.properties.weight,
     radius: f.properties.radius,
   }));
+  return crimeCache;
+}
+
+/**
+ * Turns compact graph.json-shaped data into the in-memory walk network the router searches.
+ * Crime exposure is applied here so the seed file stays editable.
+ */
+export function hydrateGraph(raw) {
+  const nodes = [];
+  for (let i = 0; i < raw.nodes.length; i += 2) {
+    nodes.push({ lat: raw.nodes[i], lng: raw.nodes[i + 1] });
+  }
+
+  const hotspots = loadCrime();
   const crimeIndex = new GridIndex(hotspots, 1200);
 
   const adjacency = Array.from({ length: nodes.length }, () => []);
@@ -110,9 +113,7 @@ export function loadGraph() {
     250,
   );
 
-  const components = buildComponents(nodes.length, raw.edges);
-
-  cache = {
+  return {
     bbox: raw.bbox,
     nodes,
     edges: raw.edges,
@@ -120,12 +121,20 @@ export function loadGraph() {
     nodeIndex,
     hotspots,
     builtAt: raw.builtAt,
-    components,
+    components: buildComponents(nodes.length, raw.edges),
   };
-  return cache;
 }
 
-/** Labels each node with its connected footpath cluster; the main cluster covers most of central Delhi. */
+/** Optional prebuilt city pack. Routing no longer requires this — corridors fetch OSM live. */
+export function loadGraph() {
+  if (graphFileCache) return graphFileCache;
+  const file = join(dataDir, 'graph.json');
+  if (!existsSync(file)) return null;
+  graphFileCache = hydrateGraph(JSON.parse(readFileSync(file, 'utf8')));
+  return graphFileCache;
+}
+
+/** Labels each node with its connected footpath cluster. */
 function buildComponents(nodeCount, edges) {
   const parent = new Int32Array(nodeCount);
   for (let i = 0; i < nodeCount; i++) parent[i] = i;
@@ -215,6 +224,13 @@ export function snap(graph, lat, lng, maxMetres = 300) {
 
 export function sameWalkNetwork(graph, nodeA, nodeB) {
   return graph.components.componentOf[nodeA] === graph.components.componentOf[nodeB];
+}
+
+let crimeGrid = null;
+
+export function crimeAt(lat, lng) {
+  if (!crimeGrid) crimeGrid = new GridIndex(loadCrime(), 1200);
+  return crimeExposure(crimeGrid, lat, lng);
 }
 
 export function inBbox(bbox, lat, lng) {

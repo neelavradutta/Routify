@@ -17,7 +17,7 @@ export default function AuthBrand() {
           The shortest walk is not always the safest one at night.
         </h1>
         <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
-          Routify helps you walk through central Delhi with three clear choices — faster, mixed, or safer streets.
+          Routify helps you walk through Indian cities with three clear choices — faster, mixed, or safer streets.
         </p>
       </div>
       <ul className="relative grid max-w-lg grid-cols-3 gap-3">

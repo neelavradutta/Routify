@@ -132,9 +132,53 @@ path.unsafe-zone {
   display: none;
 }
 
-.leaflet-marker-icon.map-pin {
+.leaflet-marker-icon.map-pin,
+.leaflet-marker-icon.you-mark {
   background: none !important;
   border: none !important;
+}
+
+.you-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.you-ring {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgb(14 165 233 / 0.28);
+  animation: youPulse 1.8s ease-out infinite;
+}
+
+.you-core {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #0284c7;
+  border: 2.5px solid white;
+  box-shadow: 0 1px 4px rgb(15 23 42 / 0.35);
+}
+
+@keyframes youPulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .you-ring {
+    animation: none;
+    opacity: 0.35;
+  }
 }
 
 .map-pin-inner {
