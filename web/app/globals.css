@@ -15,7 +15,7 @@
   }
 
   ::selection {
-    @apply bg-violet-200 text-ink;
+    @apply bg-lime-200 text-ink;
   }
 
   input,
@@ -24,7 +24,7 @@
   }
 
   :focus-visible {
-    @apply ring-2 ring-violet-400/70 ring-offset-2 ring-offset-white;
+    @apply ring-2 ring-lime-400/70 ring-offset-2 ring-offset-white;
   }
 
   * {
@@ -41,21 +41,21 @@
 @layer components {
   .card {
     @apply rounded-xl border border-line bg-white shadow-panel transition-all duration-200 ease-calm
-      hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lift;
+      hover:-translate-y-0.5 hover:border-lime-200 hover:shadow-lift;
   }
 
   .field {
     @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink
-      placeholder:text-violet-300/80 transition-all duration-200 ease-calm
-      hover:border-violet-300 focus:border-violet-600 focus:shadow-[0_0_0_4px_rgba(91,33,182,0.14)];
+      placeholder:text-lime-700/35 transition-all duration-200 ease-calm
+      hover:border-lime-400 focus:border-lime-600 focus:shadow-[0_0_0_4px_rgba(132,204,22,0.22)];
   }
 
   .btn-primary {
     @apply relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg
-      bg-violet-800 px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-white shadow-press
-      transition-all duration-200 ease-calm hover:-translate-y-0.5 hover:bg-violet-900 hover:shadow-lift
+      bg-lime-500 px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-zinc-950 shadow-press
+      transition-all duration-200 ease-calm hover:-translate-y-0.5 hover:bg-lime-400 hover:shadow-lift
       active:translate-y-0 active:scale-[0.985] disabled:pointer-events-none disabled:translate-y-0
-      disabled:bg-violet-800/35 disabled:shadow-none;
+      disabled:bg-lime-500/35 disabled:shadow-none;
   }
 
   .btn-primary::after {
@@ -75,14 +75,14 @@
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white
       px-3 py-2 text-[13px] font-medium text-muted transition-all duration-200 ease-calm
-      hover:-translate-y-px hover:border-violet-300 hover:text-violet-900 hover:shadow-panel
+      hover:-translate-y-px hover:border-lime-400 hover:text-lime-900 hover:shadow-panel
       active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-icon {
     @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white/95
       text-muted shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
-      hover:-translate-y-px hover:border-violet-300 hover:text-violet-800 hover:shadow-lift
+      hover:-translate-y-px hover:border-lime-400 hover:shadow-lift
       active:translate-y-0 active:scale-95;
   }
 
@@ -93,7 +93,7 @@
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1
       text-[11px] font-medium text-ink transition-all duration-200 ease-calm
-      hover:-translate-y-px hover:border-violet-300 hover:shadow-panel;
+      hover:-translate-y-px hover:border-lime-400 hover:shadow-panel;
   }
 }
 

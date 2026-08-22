@@ -11,9 +11,9 @@ const config: Config = {
         ink: '#12081F',
         muted: '#6B6280',
         sage: {
-          DEFAULT: '#5B21B6',
-          dark: '#4C1D95',
-          soft: '#EDE9FE',
+          DEFAULT: '#65A30D',
+          dark: '#4D7C0F',
+          soft: '#ECFCCB',
         },
         clay: {
           DEFAULT: '#E11D48',
@@ -26,8 +26,8 @@ const config: Config = {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
       },
       boxShadow: {
-        panel: '0 1px 2px rgba(18, 8, 31, 0.04), 0 10px 28px -18px rgba(91, 33, 182, 0.28)',
-        lift: '0 18px 40px -20px rgba(91, 33, 182, 0.45)',
+        panel: '0 1px 2px rgba(18, 8, 31, 0.04), 0 10px 28px -18px rgba(101, 163, 13, 0.28)',
+        lift: '0 18px 40px -20px rgba(101, 163, 13, 0.45)',
         press: 'inset 0 1px 0 rgba(255,255,255,0.28)',
       },
       transitionTimingFunction: {

@@ -34,8 +34,13 @@ function fitMap(map: L.Map, bounds: L.LatLngBoundsExpression, insetLeft: boolean
 
 function pinIcon(kind: 'from' | 'to') {
   const start = kind === 'from';
-        const fill = start ? '#5B21B6' : '#DC2626';
-  const letter = start ? 'A' : 'B';
+  const fill = start ? '#5B21B6' : '#DC2626';
+  const glyph = start
+    ? `<circle cx="18" cy="12.6" r="2.05" fill="${fill}"/>
+       <path d="M18 15.2v3.8m0 0-2.5 4.4M18 19l2.5 4.4M15.4 17.2h5.2" stroke="${fill}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+    : `<path d="M14.2 11.2v11.6" stroke="${fill}" stroke-width="1.8" stroke-linecap="round"/>
+       <path d="M14.2 11.2h8.2l-2 3.4 2 3.4H14.2V11.2Z" fill="${fill}"/>`;
+
   return L.divIcon({
     className: 'map-pin',
     iconSize: [36, 46],
@@ -45,7 +50,7 @@ function pinIcon(kind: 'from' | 'to') {
       <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M18 1.5C9.44 1.5 2.5 8.3 2.5 16.7c0 10.4 13.4 26.3 14.9 28a1.2 1.2 0 0 0 1.2 0c1.5-1.7 14.9-17.6 14.9-28C33.5 8.3 26.56 1.5 18 1.5Z" fill="${fill}" stroke="white" stroke-width="2"/>
         <circle cx="18" cy="16.5" r="8.2" fill="white"/>
-        <text x="18" y="20.4" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Sans, system-ui, sans-serif" fill="${fill}">${letter}</text>
+        ${glyph}
       </svg>
     </div>`,
   });
@@ -355,9 +360,9 @@ export default function MapView() {
           <button
             type="button"
             onClick={() => setPick('from')}
-            className={`chip ${pick === 'from' ? 'border-violet-400 bg-violet-50 text-violet-900' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
+            className={`chip ${pick === 'from' ? 'border-lime-400 bg-lime-50 text-lime-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
           >
-            <span className="h-2 w-2 rounded-full bg-violet-600" />
+            <span className="h-2 w-2 rounded-full bg-lime-500" />
             {from?.label ?? 'Start unset'}
           </button>
           <button
@@ -381,7 +386,7 @@ export default function MapView() {
             <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${mapDark ? 'text-zinc-400' : 'text-slate-500'}`}>
               {selectedRoute.label}
             </p>
-            <p className={`mt-0.5 text-sm font-semibold tabular-nums ${mapDark ? 'text-white' : 'text-violet-800'}`}>
+            <p className={`mt-0.5 text-sm font-semibold tabular-nums ${mapDark ? 'text-white' : 'text-lime-800'}`}>
               {selectedRoute.safety}/100
             </p>
           </motion.div>

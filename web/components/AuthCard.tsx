@@ -60,7 +60,7 @@ export default function AuthCard({ mode }: Props) {
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 16% 18%, rgba(91,33,182,0.22), transparent 40%), radial-gradient(circle at 82% 24%, rgba(244,63,94,0.14), transparent 38%), radial-gradient(circle at 70% 78%, rgba(245,158,11,0.16), transparent 42%)',
+              'radial-gradient(circle at 16% 18%, rgba(132,204,22,0.28), transparent 40%), radial-gradient(circle at 82% 24%, rgba(244,63,94,0.12), transparent 38%), radial-gradient(circle at 70% 78%, rgba(245,158,11,0.16), transparent 42%)',
           }}
         />
         <div className="relative">
@@ -158,7 +158,7 @@ export default function AuthCard({ mode }: Props) {
 
           <p className="mt-6 text-sm text-muted">
             {copy.switchText}{' '}
-            <Link href={copy.switchLink} className="font-medium text-violet-800 underline underline-offset-4 transition-colors hover:text-violet-950">
+            <Link href={copy.switchLink} className="font-medium text-lime-700 underline underline-offset-4 transition-colors hover:text-lime-800">
               {copy.switchLabel}
             </Link>
           </p>

@@ -44,7 +44,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
       whileTap={{ scale: 0.985 }}
       aria-pressed={selected}
       className={`w-full rounded-xl border px-3.5 py-3.5 text-left transition-shadow duration-200 ease-calm ${
-        selected ? paint.selected : 'border-line bg-white hover:border-violet-300 hover:shadow-lift'
+        selected ? paint.selected : 'border-line bg-white hover:border-lime-300 hover:shadow-lift'
       }`}
     >
       <div className="flex items-center justify-between gap-3">

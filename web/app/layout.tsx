@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               border: '1px solid #E5E7EB',
               borderRadius: '12px',
               fontSize: '13px',
-              boxShadow: '0 16px 40px -20px rgba(91, 33, 182, 0.35)',
+              boxShadow: '0 16px 40px -20px rgba(101, 163, 13, 0.4)',
             },
           }}
         />
