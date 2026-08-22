@@ -24,6 +24,8 @@ app.use(
       if (!origin) return cb(null, true);
       if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) return cb(null, true);
       if (origin === WEB_ORIGIN) return cb(null, true);
+      // Vercel production + preview URLs
+      if (/^https:\/\/[\w.-]+\.vercel\.app$/.test(origin)) return cb(null, true);
       cb(null, false);
     },
   }),
@@ -105,6 +107,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Safe Routes API on http://localhost:${PORT} (origin allowed: ${WEB_ORIGIN})`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Safe Routes API on port ${PORT} (origin allowed: ${WEB_ORIGIN})`);
 });

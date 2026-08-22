@@ -55,6 +55,63 @@ Red circles on the map only appear when at least one **Avoid** filter is on.
 | `OPENAI_API_KEY` | `server/.env` | Smarter “why this route” text. Works without it too. |
 | `NEXT_PUBLIC_API_URL` | `web/.env.local` | Point the website at a different API URL. |
 
+## Deploy backend (Render)
+
+Deploy the API before the Vercel frontend so you have a URL for `NEXT_PUBLIC_API_URL`.
+
+### Option A — Blueprint (easiest)
+
+1. Push this repo to GitHub.
+2. Go to [dashboard.render.com/blueprints](https://dashboard.render.com/blueprints) → **New Blueprint Instance**.
+3. Connect **Safe-Routes-for-Women** — Render reads `render.yaml` at the repo root.
+4. After deploy, copy the service URL (e.g. `https://routify-api.onrender.com`).
+5. Optional: set `WEB_ORIGIN` in Render → Environment to your Vercel URL later.
+
+`JWT_SECRET` is auto-generated. Test: open `https://YOUR-SERVICE.onrender.com/api/health`
+
+### Option B — Manual
+
+1. [dashboard.render.com](https://dashboard.render.com) → **New +** → **Web Service**.
+2. Connect the GitHub repo.
+3. **Root Directory:** `server`
+4. **Build Command:** `npm install`
+5. **Start Command:** `npm start`
+6. **Health Check Path:** `/api/health`
+7. Environment variables:
+
+| Key | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `JWT_SECRET` | long random string (32+ characters) |
+| `WEB_ORIGIN` | your Vercel URL (optional — `*.vercel.app` already allowed) |
+
+Free tier sleeps after ~15 min idle — first request may take 30–60 s to wake.
+
+**Note:** SQLite user accounts live on ephemeral disk on free tier. They can reset on redeploy. Routing still works; only login history may be lost.
+
+## Deploy frontend (Vercel)
+
+The website lives in the `web/` folder. The API is separate — deploy that on [Render](https://render.com) or similar first, then point the frontend at it.
+
+1. Push this repo to GitHub (already at `neelavradutta/Safe-Routes-for-Women`).
+2. Go to [vercel.com/new](https://vercel.com/new) → **Import** the repo.
+3. Set **Root Directory** to `web` (Edit → Root Directory → `web`).
+4. Add environment variable:
+   - `NEXT_PUBLIC_API_URL` = your backend URL (e.g. `https://your-api.onrender.com`)
+5. Click **Deploy**.
+
+After deploy, set `WEB_ORIGIN` on the backend to your Vercel URL (e.g. `https://your-app.vercel.app`) so login and routing work.
+
+**CLI (optional):**
+
+```bash
+cd web
+npx vercel login
+npx vercel --prod
+```
+
+Set `NEXT_PUBLIC_API_URL` in the Vercel project settings when prompted or in the dashboard.
+
 ## Tests
 
 ```bash
