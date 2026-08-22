@@ -17,7 +17,7 @@ import {
   Trees,
 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
-import { api, SCORE_COLORS, type Place } from '@/lib/api';
+import { api, type Place } from '@/lib/api';
 import Logo from '@/components/Logo';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -107,11 +107,10 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
 
   return (
     <div ref={box} className="relative">
-      <div className="mb-1.5 flex items-center justify-between">
+      <div className="mb-1.5">
         <label className="label" htmlFor={`place-${which}`}>
           {isStart ? 'Start' : 'Destination'}
         </label>
-        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-900">Map click</span>}
       </div>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
@@ -202,7 +201,6 @@ export default function RouteRail() {
     planning,
     explanation,
     explaining,
-    showZones,
     toggle,
     swap,
     reset,
@@ -273,7 +271,7 @@ export default function RouteRail() {
             <PlaceField which="to" />
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-muted">
-            Central Delhi only. Drop pins on streets, not lawns or building interiors.
+            Drop pins on map to select locations.
           </p>
         </section>
 
@@ -375,35 +373,6 @@ export default function RouteRail() {
                 ) : (
                   <WhyPoints key={explanation?.text ?? 'empty'} text={explanation?.text} />
                 )}
-              </div>
-
-              <div className="card p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="label">Map legend</p>
-                  <button
-                    type="button"
-                    onClick={() => toggle('showZones')}
-                    className="rounded-full border border-line bg-white px-2.5 py-1 text-[11px] font-medium text-ink transition-all duration-200 hover:-translate-y-px hover:border-lime-400 hover:bg-lime-50 hover:shadow-panel"
-                  >
-                    {showZones ? 'Hide zones' : 'Show zones'}
-                  </button>
-                </div>
-                <ul className="space-y-2 text-xs text-muted">
-                  <li className="flex items-center gap-2 text-[12px] font-medium text-ink">
-                    <span className="h-3 w-3 rounded-full border border-rose-400 bg-rose-400/35" />
-                    Flagged unsafe zones
-                  </li>
-                  {[
-                    { color: SCORE_COLORS.good, text: '72 and above' },
-                    { color: SCORE_COLORS.fair, text: '55 to 71' },
-                    { color: SCORE_COLORS.poor, text: 'Below 55' },
-                  ].map((item) => (
-                    <li key={item.text} className="flex items-center gap-2">
-                      <span className="h-1.5 w-7 rounded-full" style={{ backgroundColor: item.color }} />
-                      {item.text}
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               <p className="text-[11px] leading-relaxed text-muted">

@@ -16,6 +16,38 @@ import { formatDistance, SCORE_COLORS, scoreTone } from '@/lib/api';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+function CompareTip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string; payload: { distance: number } }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white px-2.5 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
+      <p className="text-[11px] font-semibold tracking-tight text-zinc-900">{label}</p>
+      <p className="mt-0.5 text-[10px] text-zinc-500">{formatDistance(payload[0].payload.distance)}</p>
+      <div className="mt-2 space-y-1 border-t border-zinc-100 pt-1.5">
+        {payload.map((entry) => (
+          <div key={entry.name} className="flex items-center justify-between gap-5 text-[11px]">
+            <span className="inline-flex items-center gap-1.5 text-zinc-500">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
+              {entry.name}
+            </span>
+            <span className="tabular-nums font-medium text-zinc-900">
+              {entry.name === 'Safety' ? `${entry.value}/100` : `${entry.value} min`}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Comparison({
   routes,
 }: {
@@ -30,9 +62,19 @@ function Comparison({
 
   return (
     <div className="flex flex-col">
-      <div className="h-[7.25rem] w-full">
+      <div
+        className="h-[7.25rem] w-full select-none"
+        onClick={(event) => event.preventDefault()}
+        onMouseDown={(event) => event.preventDefault()}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 8, left: 4, bottom: 2 }} barGap={3} barCategoryGap="22%">
+          <BarChart
+            data={data}
+            margin={{ top: 8, right: 8, left: 4, bottom: 2 }}
+            barGap={3}
+            barCategoryGap="22%"
+            style={{ cursor: 'default' }}
+          >
             <XAxis
               dataKey="name"
               tick={{ fontSize: 10, fill: '#71717A', fontFamily: 'inherit' }}
@@ -55,26 +97,35 @@ function Comparison({
             />
             <YAxis yAxisId="time" orientation="right" hide />
             <ChartTooltip
-              cursor={{ fill: 'rgba(28,23,19,0.04)' }}
-              contentStyle={{
-                background: '#FFFFFF',
-                border: '1px solid #E5E7EB',
-                borderRadius: 10,
-                fontSize: 11,
-                color: '#0F172A',
-              }}
-              formatter={(value, name) => (name === 'Safety' ? [`${value}/100`, name] : [`${value} min`, name])}
-              labelFormatter={(label) => {
-                const row = data.find((d) => d.name === label);
-                return row ? `${row.name} · ${formatDistance(row.distance)}` : label;
-              }}
+              trigger="hover"
+              cursor={{ fill: 'rgba(24, 24, 27, 0.045)', radius: 6 }}
+              content={<CompareTip />}
+              wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+              animationDuration={180}
             />
-            <Bar yAxisId="score" dataKey="safety" name="Safety" radius={[3, 3, 0, 0]} maxBarSize={18}>
+            <Bar
+              yAxisId="score"
+              dataKey="safety"
+              name="Safety"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={18}
+              cursor="default"
+              isAnimationActive={false}
+            >
               {data.map((row) => (
-                <Cell key={row.name} fill={SCORE_COLORS[scoreTone(row.safety)]} />
+                <Cell key={row.name} fill={SCORE_COLORS[scoreTone(row.safety)]} style={{ outline: 'none' }} />
               ))}
             </Bar>
-            <Bar yAxisId="time" dataKey="minutes" name="Minutes" fill="#38BDF8" radius={[3, 3, 0, 0]} maxBarSize={18} />
+            <Bar
+              yAxisId="time"
+              dataKey="minutes"
+              name="Minutes"
+              fill="#38BDF8"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={18}
+              cursor="default"
+              isAnimationActive={false}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -150,7 +201,9 @@ export default function MapRouteDock() {
               >
                 <div className="mb-1 flex items-end justify-between gap-2">
                   <p className="font-serif text-[13px] leading-tight text-ink">Safety against time</p>
-                  <p className="shrink-0 text-[10px] font-medium text-rose-700">{plan.zones.length} flagged unsafe</p>
+                  <p className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
+                    {plan.zones.length} Flagged Unsafe
+                  </p>
                 </div>
                 <Comparison routes={plan.routes} />
               </motion.div>
