@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
-import { Crosshair, Maximize2, Moon, MousePointerClick, Sun } from 'lucide-react';
+import { Crosshair, Maximize2, MousePointerClick } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { api, type Route } from '@/lib/api';
 import Basemap from '@/components/Basemap';
@@ -116,7 +116,6 @@ function Controls({
   fitKey: string;
 }) {
   const map = useMap();
-  const { mapDark, toggleMap } = useApp();
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,9 +158,6 @@ function Controls({
       onMouseDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
-      <button type="button" onClick={toggleMap} className="btn-icon" title={mapDark ? 'Light map' : 'Dark map'}>
-        {mapDark ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
-      </button>
       <button type="button" onClick={locate} className="btn-icon" title="Find my location">
         <Crosshair size={16} strokeWidth={1.75} />
       </button>
@@ -301,14 +297,14 @@ export default function MapView() {
         fadeAnimation
         markerZoomAnimation
         easeLinearity={0.22}
-        className={`absolute inset-0 h-full w-full ${mapDark ? 'map-night' : 'map-day'}`}
+        className="absolute inset-0 h-full w-full map-day"
 
         maxBounds={[
           [BBOX.south - 0.05, BBOX.west - 0.05],
           [BBOX.north + 0.05, BBOX.east + 0.05],
         ]}
       >
-        <Basemap dark={mapDark} />
+        <Basemap dark={false} />
 
         <SizeFixer />
         <ClickToPick />

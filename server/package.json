@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "build:graph": "node scripts/build-graph.mjs"
+    "build:graph": "node scripts/build-graph.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:auth": "node --test test/auth.test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -69,7 +69,7 @@ export const useApp = create<State>()(
       pick: 'from',
 
       night: true,
-      mapDark: true,
+      mapDark: false,
       avoidUnlit: false,
       avoidIsolated: false,
 
