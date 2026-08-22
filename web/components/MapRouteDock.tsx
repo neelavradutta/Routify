@@ -53,8 +53,10 @@ function CompareTip({
 
 function Comparison({
   routes,
+  fill = false,
 }: {
   routes: { id: string; label: string; safety: number; duration: number; distance: number }[];
+  fill?: boolean;
 }) {
   const data = routes.map((r) => ({
     name: r.label,
@@ -64,9 +66,9 @@ function Comparison({
   }));
 
   return (
-    <div className="flex flex-col">
+    <div className={`flex min-h-0 flex-col ${fill ? 'h-full' : ''}`}>
       <div
-          className="h-[5.5rem] w-full select-none"
+          className={`w-full select-none ${fill ? 'min-h-0 flex-1' : 'h-[5.5rem]'}`}
         onClick={(event) => event.preventDefault()}
         onMouseDown={(event) => event.preventDefault()}
       >
@@ -111,7 +113,7 @@ function Comparison({
               dataKey="safety"
               name="Safety"
               radius={[3, 3, 0, 0]}
-              maxBarSize={18}
+              maxBarSize={fill ? 42 : 18}
               cursor="default"
               isAnimationActive
               animationBegin={80}
@@ -128,7 +130,7 @@ function Comparison({
               name="Minutes"
               fill="#38BDF8"
               radius={[3, 3, 0, 0]}
-              maxBarSize={18}
+              maxBarSize={fill ? 42 : 18}
               cursor="default"
               isAnimationActive
               animationBegin={140}
@@ -193,18 +195,20 @@ export default function MapRouteDock() {
     ? [...plan.routes].sort((a, b) => CARD_ORDER.indexOf(a.id) - CARD_ORDER.indexOf(b.id))
     : [];
   const expandedId = stacked.some((item) => item.id === selected) ? selected : stacked[0]?.id;
-  const [panel, setPanel] = useState<'compare' | 'why' | null>('why');
-  const compareOpen = panel === 'compare';
-  const whyOpen = panel === 'why';
+  const [whyOpen, setWhyOpen] = useState(true);
+  const [compareOpen, setCompareOpen] = useState(false);
   const showRoutes = planning || Boolean(plan);
 
   useEffect(() => {
-    if (plan) setPanel('why');
+    if (plan) {
+      setWhyOpen(true);
+      setCompareOpen(false);
+    }
   }, [plan]);
 
   return (
     <div className="pointer-events-none absolute bottom-4 left-4 top-14 z-[1100] flex w-[min(22rem,calc(100%-5.5rem))] flex-col">
-      <div className="pointer-events-auto min-h-0 flex-1 space-y-1.5 overflow-y-auto overflow-x-visible pr-0.5">
+      <div className="pointer-events-auto min-h-0 shrink-0 space-y-1.5 overflow-y-auto overflow-x-visible pr-0.5">
         <AnimatePresence>
           {showRoutes && (
             <motion.div
@@ -247,106 +251,115 @@ export default function MapRouteDock() {
                       </div>
                     </motion.div>
                   ))}
-              {plan ? (
-                <div className="rounded-xl border border-line bg-white shadow-panel">
-                  <button
-                    type="button"
-                    onClick={() => setPanel(whyOpen ? null : 'why')}
-                    className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
-                    aria-expanded={whyOpen}
-                  >
-                    <p className="font-serif text-[13px] leading-tight text-ink">Why this route</p>
-                    <motion.span
-                      animate={{ rotate: whyOpen ? 180 : 0 }}
-                      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-500"
-                    >
-                      <ChevronDown size={16} strokeWidth={2} />
-                    </motion.span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {whyOpen && (
-                      <motion.div
-                        key="why-body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: EASE }}
-                        className="overflow-hidden"
-                      >
-                        <div className="border-t border-line px-2.5 py-2">
-                          <AnimatePresence mode="wait">
-                            {explaining && !explanation ? (
-                              <motion.div
-                                key={`why-load-${expandedId}`}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.28, ease: EASE }}
-                                className="space-y-2 py-1"
-                              >
-                                <div className="h-2.5 w-full animate-pulse rounded bg-line" />
-                                <div className="h-2.5 w-11/12 animate-pulse rounded bg-line" />
-                                <div className="h-2.5 w-9/12 animate-pulse rounded bg-line" />
-                              </motion.div>
-                            ) : (
-                              <WhyPoints
-                                key={`why-${expandedId}`}
-                                refreshKey={expandedId ?? 'why'}
-                                text={explanation?.text}
-                              />
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : null}
-              {plan ? (
-                <div className="rounded-xl border border-line bg-white shadow-panel">
-                  <button
-                    type="button"
-                    onClick={() => setPanel(compareOpen ? null : 'compare')}
-                    className="flex w-full items-center gap-2 px-2.5 py-2 text-left"
-                    aria-expanded={compareOpen}
-                  >
-                    <p className="min-w-0 flex-1 font-serif text-[13px] leading-tight text-ink">Safety Vs Time</p>
-                    <p className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
-                      {plan.zones.length} Flagged Unsafe
-                    </p>
-                    <motion.span
-                      animate={{ rotate: compareOpen ? 180 : 0 }}
-                      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center text-zinc-500"
-                    >
-                      <ChevronDown size={16} strokeWidth={2} />
-                    </motion.span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {compareOpen && (
-                      <motion.div
-                        key="compare-body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: EASE }}
-                        className="overflow-hidden"
-                      >
-                        <div className="border-t border-line px-2.5 py-2">
-                          <Comparison key={`chart-${panel}`} routes={plan.routes} />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : null}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className="pointer-events-auto mt-1.5 flex shrink-0 gap-2">
+      {plan ? (
+        <div className="pointer-events-auto mt-1.5 shrink-0 rounded-xl border border-line bg-white shadow-panel">
+          <button
+            type="button"
+            onClick={() => {
+              if (whyOpen) {
+                setWhyOpen(false);
+              } else {
+                setWhyOpen(true);
+                setCompareOpen(false);
+              }
+            }}
+            className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
+            aria-expanded={whyOpen}
+          >
+            <p className="font-serif text-[13px] leading-tight text-ink">Why this route</p>
+            <motion.span
+              animate={{ rotate: whyOpen ? 180 : 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-500"
+            >
+              <ChevronDown size={16} strokeWidth={2} />
+            </motion.span>
+          </button>
+          <AnimatePresence initial={false}>
+            {whyOpen && (
+              <motion.div
+                key="why-body"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.28, ease: EASE }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-line px-2.5 py-2">
+                  <AnimatePresence mode="wait">
+                    {explaining && !explanation ? (
+                      <motion.div
+                        key={`why-load-${expandedId}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                        className="space-y-2 py-1"
+                      >
+                        <div className="h-2.5 w-full animate-pulse rounded bg-line" />
+                        <div className="h-2.5 w-11/12 animate-pulse rounded bg-line" />
+                        <div className="h-2.5 w-9/12 animate-pulse rounded bg-line" />
+                      </motion.div>
+                    ) : (
+                      <WhyPoints
+                        key={`why-${expandedId}`}
+                        refreshKey={expandedId ?? 'why'}
+                        text={explanation?.text}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : null}
+
+      {plan ? (
+        <div
+          className={`pointer-events-auto mt-1.5 flex min-h-0 flex-col rounded-xl border border-line bg-white shadow-panel ${
+            compareOpen ? 'flex-1' : 'shrink-0'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (compareOpen) {
+                setCompareOpen(false);
+              } else {
+                setCompareOpen(true);
+                setWhyOpen(false);
+              }
+            }}
+            className="flex w-full shrink-0 items-center gap-2 px-2.5 py-2 text-left"
+            aria-expanded={compareOpen}
+          >
+            <p className="min-w-0 flex-1 font-serif text-[13px] leading-tight text-ink">Safety Vs Time</p>
+            <p className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
+              {plan.zones.length} Flagged Unsafe
+            </p>
+            <motion.span
+              animate={{ rotate: compareOpen ? 180 : 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+              className="flex h-6 w-6 shrink-0 items-center justify-center text-zinc-500"
+            >
+              <ChevronDown size={16} strokeWidth={2} />
+            </motion.span>
+          </button>
+          {compareOpen ? (
+            <div className="min-h-0 flex-1 overflow-hidden border-t border-line px-2.5 py-2">
+              <Comparison key="chart-fill" fill routes={plan.routes} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="pointer-events-auto mt-auto flex shrink-0 gap-2 pt-1.5">
         <button
           type="button"
           onClick={() => setPick('from')}

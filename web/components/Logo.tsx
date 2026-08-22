@@ -23,7 +23,14 @@ export default function Logo({ size = 36, withWord = true, wordClass = 'font-ser
         />
         <circle cx="31" cy="20.7" r="1.55" fill="white" />
       </svg>
-      {withWord ? <p className={wordClass}>Routify</p> : <span className="sr-only">Routify</span>}
+      {withWord ? (
+        <div className="min-w-0">
+          <p className={wordClass}>Routify</p>
+          <p className="mt-0.5 text-[10px] leading-none text-muted">Your safety our priority</p>
+        </div>
+      ) : (
+        <span className="sr-only">Routify</span>
+      )}
     </div>
   );
 }
