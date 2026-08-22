@@ -1,0 +1,11 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+.env
+.env.local
+
+server/data/graph.json
+server/data/users.sqlite
+server/data/.cache/

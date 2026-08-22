@@ -1,0 +1,78 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ground text-ink font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-sage-soft text-ink;
+  }
+
+  input,
+  button {
+    @apply outline-none;
+  }
+
+  :focus-visible {
+    @apply ring-2 ring-sage/40 ring-offset-2 ring-offset-panel;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-panel shadow-panel;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-line bg-white/70 px-3 py-2 text-sm text-ink
+      placeholder:text-muted/70 transition-colors duration-150 ease-calm
+      focus:border-sage/60 focus:bg-white;
+  }
+
+  .btn-primary {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-md bg-sage px-4 py-2.5
+      text-sm font-medium text-panel transition-colors duration-150 ease-calm
+      hover:bg-sage-dark disabled:cursor-not-allowed disabled:bg-sage/40;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line bg-transparent
+      px-3 py-2 text-sm text-muted transition-colors duration-150 ease-calm hover:bg-white/60 hover:text-ink;
+  }
+
+  .btn-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel
+      text-muted shadow-panel transition-colors duration-150 ease-calm hover:text-ink;
+  }
+
+  .label {
+    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted;
+  }
+}
+
+/* Leaflet defaults are loud; tone them down to match the panel palette. */
+.leaflet-container {
+  @apply bg-ground font-sans;
+}
+
+.leaflet-control-attribution {
+  @apply !bg-panel/80 !text-[10px] !text-muted;
+}
+
+.leaflet-tooltip {
+  @apply !rounded-md !border-line !bg-panel !px-2 !py-1 !text-xs !text-ink !shadow-lift;
+}
+
+.leaflet-tooltip::before {
+  display: none;
+}
