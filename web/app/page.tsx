@@ -41,7 +41,12 @@ export default function HomePage() {
   }
 
   return (
-    <main className="flex h-dvh overflow-hidden bg-ground">
+    <motion.main
+      className="flex h-dvh overflow-hidden bg-ground"
+      initial={{ opacity: 0, y: 14, scale: 0.992 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="relative z-20 w-[400px] shrink-0 py-5 pl-5">
         <RouteRail />
       </div>
@@ -53,6 +58,6 @@ export default function HomePage() {
           Scores are estimates from OpenStreetMap lighting, camera and activity data plus area-level crime priors. They describe streets, not people.
         </p>
       </div>
-    </main>
+    </motion.main>
   );
 }

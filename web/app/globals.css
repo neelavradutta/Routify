@@ -142,6 +142,36 @@ path.unsafe-zone {
   animation: pinDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.swap-flow {
+  background: linear-gradient(
+    90deg,
+    #84cc16 0%,
+    #a3e635 18%,
+    #e2e8f0 36%,
+    #fb7185 52%,
+    #c084fc 68%,
+    #e2e8f0 84%,
+    #84cc16 100%
+  );
+  background-size: 220% 100%;
+  animation: swapFlow 2.8s linear infinite;
+}
+
+@keyframes swapFlow {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 220% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-flow {
+    animation: none;
+  }
+}
+
 .route-fade {
   animation: routeFade 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

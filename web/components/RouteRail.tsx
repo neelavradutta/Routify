@@ -211,7 +211,7 @@ export default function RouteRail() {
             <PlaceField which="from" />
 
             <div className="relative z-10 mt-3 mb-0 flex items-center justify-center py-1">
-              <span className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-lime-500 via-slate-200 to-rose-400" />
+              <span className="swap-flow absolute inset-x-8 top-1/2 h-0.5 -translate-y-1/2 rounded-full" />
               <motion.button
                 type="button"
                 onClick={() => {

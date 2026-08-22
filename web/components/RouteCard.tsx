@@ -30,7 +30,7 @@ const FACTORS = [
   { key: 'light', label: 'Lit', color: '#0284C7' },
   { key: 'camera', label: 'Cameras', color: '#4D7C0F' },
   { key: 'isolation', label: 'Isolation', color: '#92400E' },
-  { key: 'crime', label: 'Crime', color: '#9F1239' },
+  { key: 'crime', label: 'Crime', color: '#EC4899' },
 ] as const;
 
 export default function RouteCard({ route, fastest, selected, onSelect, index }: Props) {

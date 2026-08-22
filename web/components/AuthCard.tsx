@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { ApiError } from '@/lib/api';
 import Logo from '@/components/Logo';
+import { useAuthFlow } from '@/components/AuthFlow';
 
 type Props = { mode: 'login' | 'register' };
 
@@ -34,7 +35,9 @@ const COPY = {
 export default function AuthCard({ mode }: Props) {
   const copy = COPY[mode];
   const router = useRouter();
-  const signIn = useApp((s) => s.signIn);
+  const prepareSession = useApp((s) => s.prepareSession);
+  const commitSession = useApp((s) => s.commitSession);
+  const { leave } = useAuthFlow();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -45,11 +48,12 @@ export default function AuthCard({ mode }: Props) {
     event.preventDefault();
     setBusy(true);
     try {
-      await signIn(mode, email, password, mode === 'register' ? fullName : undefined);
+      const session = await prepareSession(mode, email, password, mode === 'register' ? fullName : undefined);
+      await leave();
+      commitSession(session);
       router.replace('/');
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not sign you in');
-    } finally {
       setBusy(false);
     }
   }

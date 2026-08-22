@@ -31,6 +31,13 @@ type State = {
   explaining: boolean;
 
   signIn: (mode: 'login' | 'register', email: string, password: string, fullName?: string) => Promise<void>;
+  prepareSession: (
+    mode: 'login' | 'register',
+    email: string,
+    password: string,
+    fullName?: string,
+  ) => Promise<{ token: string; user: { id: number; email: string } }>;
+  commitSession: (session: { token: string; user: { email: string } }) => void;
   signOut: () => void;
   restore: () => Promise<void>;
 
@@ -76,8 +83,15 @@ export const useApp = create<State>()(
       explaining: false,
 
       signIn: async (mode, email, password, fullName) => {
-        const session =
-          mode === 'login' ? await api.login(email, password) : await api.register(email, password, fullName ?? '');
+        const session = await get().prepareSession(mode, email, password, fullName);
+        get().commitSession(session);
+      },
+
+      prepareSession: async (mode, email, password, fullName) => {
+        return mode === 'login' ? api.login(email, password) : api.register(email, password, fullName ?? '');
+      },
+
+      commitSession: (session) => {
         set({ token: session.token, email: session.user.email, ready: true });
       },
 
