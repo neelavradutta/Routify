@@ -33,8 +33,8 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 text-sm text-muted"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-white">
-            <span className="absolute inset-0 rounded-lg bg-teal-400/50 animate-pulseRing" />
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-violet-800 text-white">
+            <span className="absolute inset-0 rounded-lg bg-violet-400/50 animate-pulseRing" />
             <Compass size={16} strokeWidth={1.75} />
           </span>
           Opening the map

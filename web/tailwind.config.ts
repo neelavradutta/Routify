@@ -7,16 +7,16 @@ const config: Config = {
       colors: {
         ground: '#FFFFFF',
         panel: '#FFFFFF',
-        line: '#E5E7EB',
-        ink: '#0F172A',
-        muted: '#64748B',
+        line: '#E8E4F2',
+        ink: '#12081F',
+        muted: '#6B6280',
         sage: {
-          DEFAULT: '#0D9488',
-          dark: '#0F766E',
-          soft: '#CCFBF1',
+          DEFAULT: '#5B21B6',
+          dark: '#4C1D95',
+          soft: '#EDE9FE',
         },
         clay: {
-          DEFAULT: '#F43F5E',
+          DEFAULT: '#E11D48',
           soft: '#FFE4E6',
         },
         amberish: '#F59E0B',
@@ -26,9 +26,9 @@ const config: Config = {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
       },
       boxShadow: {
-        panel: '0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -16px rgba(15, 23, 42, 0.18)',
-        lift: '0 16px 40px -20px rgba(13, 148, 136, 0.35)',
-        press: 'inset 0 1px 0 rgba(255,255,255,0.25)',
+        panel: '0 1px 2px rgba(18, 8, 31, 0.04), 0 10px 28px -18px rgba(91, 33, 182, 0.28)',
+        lift: '0 18px 40px -20px rgba(91, 33, 182, 0.45)',
+        press: 'inset 0 1px 0 rgba(255,255,255,0.28)',
       },
       transitionTimingFunction: {
         calm: 'cubic-bezier(0.22, 1, 0.36, 1)',

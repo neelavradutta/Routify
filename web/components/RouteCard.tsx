@@ -40,8 +40,8 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
       aria-pressed={selected}
       className={`w-full rounded-xl border px-3.5 py-3.5 text-left transition-shadow duration-200 ease-calm ${
         selected
-          ? 'border-teal-300 bg-teal-50 shadow-panel'
-          : 'border-slate-200 bg-white hover:border-teal-300 hover:shadow-panel'
+          ? 'border-violet-300 bg-violet-50 shadow-panel'
+          : 'border-line bg-white hover:border-violet-300 hover:shadow-lift'
       }`}
     >
       <div className="flex items-center justify-between gap-3">

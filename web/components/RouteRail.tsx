@@ -51,12 +51,15 @@ function FilterButton({
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
-      whileTap={{ scale: 0.98 }}
-      className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-200 ease-calm ${
-        pressed ? 'border-teal-300 bg-teal-50 shadow-panel' : 'border-slate-200 bg-white hover:border-teal-300'
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.985 }}
+      className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-200 ease-calm ${
+        pressed
+          ? 'border-violet-300 bg-violet-50 shadow-panel'
+          : 'border-line bg-white hover:border-violet-300 hover:bg-violet-50/60 hover:shadow-panel'
       }`}
     >
-      <span className={`mt-0.5 ${pressed ? 'text-teal-600' : 'text-muted'}`}>{icon}</span>
+      <span className={`mt-0.5 transition-colors duration-200 ${pressed ? 'text-violet-700' : 'text-muted'}`}>{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium text-ink">{label}</span>
         <span className="mt-0.5 block text-[11px] text-muted">{hint}</span>
@@ -116,7 +119,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
         <label className="label" htmlFor={`place-${which}`}>
           {isStart ? 'Start' : 'Destination'}
         </label>
-        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-teal-600">Map click</span>}
+        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-violet-700">Map click</span>}
       </div>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
@@ -131,7 +134,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
           }}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isStart ? 'Connaught Place' : 'Khan Market'}
-          className={`field pl-10 pr-9 ${active ? 'border-sage' : ''}`}
+          className={`field pl-10 pr-9 ${active ? 'border-violet-600' : ''}`}
           autoComplete="off"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
@@ -156,7 +159,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
                     setPlace(which, result);
                     setOpen(false);
                   }}
-                  className="block w-full px-3 py-2.5 text-left transition-colors duration-150 hover:bg-teal-50"
+                  className="block w-full px-3 py-2.5 text-left transition-all duration-150 hover:translate-x-0.5 hover:bg-violet-50"
                 >
                   <span className="block truncate text-sm text-ink">{result.label}</span>
                   <span className="block truncate text-xs text-muted">{result.context}</span>
@@ -249,7 +252,7 @@ export default function RouteRail() {
     <aside className="flex h-full w-full flex-col border-r border-line bg-panel">
       <header className="flex items-center justify-between border-b border-line px-5 py-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white shadow-press">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-800 text-white shadow-press transition-transform duration-200 hover:scale-105">
             <Compass size={16} strokeWidth={1.75} />
           </span>
           <div>
@@ -257,17 +260,19 @@ export default function RouteRail() {
             <p className="mt-1 text-[11px] tracking-wide text-muted">Central Delhi · pedestrian</p>
           </div>
         </div>
-        <button
+        <motion.button
           type="button"
           className="btn-icon !h-9 !w-9 !rounded-lg"
           title={email ? `Sign out ${email}` : 'Sign out'}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => {
             signOut();
             router.replace('/login');
           }}
         >
           <LogOut size={15} strokeWidth={1.75} />
-        </button>
+        </motion.button>
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
@@ -276,7 +281,7 @@ export default function RouteRail() {
             <PlaceField which="from" />
 
             <div className="relative z-10 my-1 flex items-center justify-center py-1">
-              <span className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-teal-400 via-slate-200 to-rose-400" />
+              <span className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-violet-500 via-slate-200 to-rose-400" />
               <motion.button
                 type="button"
                 onClick={() => {
@@ -285,9 +290,10 @@ export default function RouteRail() {
                 }}
                 disabled={!from && !to}
                 animate={{ rotate: spin }}
+                whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.88 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 16 }}
-                className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-teal-500 bg-white text-teal-700 shadow-panel hover:bg-teal-50 disabled:border-slate-200 disabled:text-slate-300"
+                className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-violet-600 bg-white text-violet-800 shadow-panel hover:bg-violet-50 disabled:border-slate-200 disabled:text-slate-300"
                 title="Swap start and destination"
               >
                 <ArrowUpDown size={16} strokeWidth={2} />
@@ -303,7 +309,7 @@ export default function RouteRail() {
 
         <section className="space-y-2">
           <p className="label">Time of day</p>
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+          <div className="relative grid grid-cols-2 gap-1 rounded-xl border border-line bg-violet-50 p-1">
             {[
               { on: false, label: 'Day', icon: <Sun size={14} strokeWidth={1.75} /> },
               { on: true, label: 'Night', icon: <Moon size={14} strokeWidth={1.75} /> },
@@ -314,12 +320,21 @@ export default function RouteRail() {
                 onClick={() => {
                   if (night !== option.on) toggle('night');
                 }}
-                className={`relative flex items-center justify-center gap-2 rounded-lg py-2 text-[13px] font-medium transition-all duration-200 ${
-                  night === option.on ? 'bg-white text-teal-800 shadow-panel' : 'text-muted hover:text-ink'
+                className={`relative z-10 flex items-center justify-center gap-2 rounded-lg py-2 text-[13px] font-medium transition-colors duration-200 ${
+                  night === option.on ? 'text-violet-900' : 'text-muted hover:text-ink'
                 }`}
               >
-                {option.icon}
-                {option.label}
+                {night === option.on && (
+                  <motion.span
+                    layoutId="tod-pill"
+                    className="absolute inset-0 rounded-lg bg-white shadow-panel"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {option.icon}
+                  {option.label}
+                </span>
               </button>
             ))}
           </div>
@@ -349,6 +364,7 @@ export default function RouteRail() {
             className="btn-primary"
             onClick={() => void run()}
             disabled={!canRoute}
+            whileHover={canRoute ? { y: -2 } : undefined}
             whileTap={canRoute ? { scale: 0.985 } : undefined}
           >
             {planning ? <Loader2 size={15} className="animate-spin" /> : null}
@@ -360,9 +376,9 @@ export default function RouteRail() {
             )}
           </motion.button>
           {(from || to || plan) && (
-            <button type="button" className="btn-ghost w-full" onClick={reset}>
+            <motion.button type="button" className="btn-ghost w-full" onClick={reset} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
               Clear
-            </button>
+            </motion.button>
           )}
         </section>
 
@@ -431,7 +447,7 @@ export default function RouteRail() {
                   <button
                     type="button"
                     onClick={() => toggle('showZones')}
-                    className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-ink transition-colors hover:border-teal-300 hover:bg-teal-50"
+                    className="rounded-full border border-line bg-white px-2.5 py-1 text-[11px] font-medium text-ink transition-all duration-200 hover:-translate-y-px hover:border-violet-300 hover:bg-violet-50 hover:shadow-panel"
                   >
                     {showZones ? 'Hide zones' : 'Show zones'}
                   </button>

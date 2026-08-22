@@ -15,7 +15,7 @@
   }
 
   ::selection {
-    @apply bg-teal-100 text-ink;
+    @apply bg-violet-200 text-ink;
   }
 
   input,
@@ -24,7 +24,7 @@
   }
 
   :focus-visible {
-    @apply ring-2 ring-teal-400/60 ring-offset-2 ring-offset-white;
+    @apply ring-2 ring-violet-400/70 ring-offset-2 ring-offset-white;
   }
 
   ::-webkit-scrollbar {
@@ -32,7 +32,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #ddd6fe;
     border-radius: 999px;
     border: 2px solid #ffffff;
   }
@@ -44,48 +44,65 @@
 
 @layer components {
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-panel;
+    @apply rounded-xl border border-line bg-white shadow-panel transition-all duration-200 ease-calm
+      hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lift;
   }
 
   .field {
-    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink
-      placeholder:text-slate-400 transition-all duration-200 ease-calm
-      hover:border-teal-300 focus:border-teal-500 focus:shadow-[0_0_0_4px_rgba(13,148,136,0.15)];
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink
+      placeholder:text-violet-300/80 transition-all duration-200 ease-calm
+      hover:border-violet-300 focus:border-violet-600 focus:shadow-[0_0_0_4px_rgba(91,33,182,0.14)];
   }
 
   .btn-primary {
     @apply relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg
-      bg-teal-600 px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-white shadow-press
-      transition-all duration-200 ease-calm hover:-translate-y-px hover:bg-teal-700 hover:shadow-lift
+      bg-violet-800 px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-white shadow-press
+      transition-all duration-200 ease-calm hover:-translate-y-0.5 hover:bg-violet-900 hover:shadow-lift
       active:translate-y-0 active:scale-[0.985] disabled:pointer-events-none disabled:translate-y-0
-      disabled:bg-teal-600/35 disabled:shadow-none;
+      disabled:bg-violet-800/35 disabled:shadow-none;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.22) 48%, transparent 70%);
+    transform: translateX(-130%);
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .btn-primary:hover::after {
+    transform: translateX(130%);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white
-      px-3 py-2 text-[13px] font-medium text-slate-500 transition-all duration-200 ease-calm
-      hover:border-teal-300 hover:text-ink active:scale-[0.98]
-      disabled:pointer-events-none disabled:opacity-40;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white
+      px-3 py-2 text-[13px] font-medium text-muted transition-all duration-200 ease-calm
+      hover:-translate-y-px hover:border-violet-300 hover:text-violet-900 hover:shadow-panel
+      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-icon {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/95
-      text-slate-500 shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
-      hover:-translate-y-px hover:text-teal-700 hover:shadow-lift active:translate-y-0 active:scale-95;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white/95
+      text-muted shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
+      hover:-translate-y-px hover:border-violet-300 hover:text-violet-800 hover:shadow-lift
+      active:translate-y-0 active:scale-95;
   }
 
   .label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500;
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-muted;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1
-      text-[11px] font-medium text-ink;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1
+      text-[11px] font-medium text-ink transition-all duration-200 ease-calm
+      hover:-translate-y-px hover:border-violet-300 hover:shadow-panel;
   }
 }
 
 .leaflet-container {
-  @apply bg-sky-50 font-sans;
+  @apply bg-[#efeaf8] font-sans;
 }
 
 .leaflet-control-attribution {
@@ -93,20 +110,43 @@
 }
 
 .leaflet-tooltip {
-  @apply !rounded-lg !border-slate-200 !bg-white !px-2.5 !py-1.5 !text-xs !text-ink !shadow-lift;
+  @apply !rounded-lg !border-line !bg-white !px-2.5 !py-1.5 !text-xs !text-ink !shadow-lift;
 }
 
 .leaflet-tooltip::before {
   display: none;
 }
 
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.6);
+.leaflet-marker-icon.map-pin {
+  background: none !important;
+  border: none !important;
+}
+
+.map-pin-inner {
+  transform-origin: 50% 100%;
+  animation: pinDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.route-fade {
+  animation: routeFade 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes routeFade {
+  from {
     opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pinDrop {
+  from {
+    transform: translateY(-14px) scale(0.82);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
   }
 }
