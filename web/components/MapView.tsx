@@ -18,18 +18,28 @@ const CENTER: [number, number] = [28.6139, 77.2295];
 const BBOX = { south: 28.55, west: 77.15, north: 28.68, east: 77.28 };
 const DRAW_MS = 3400;
 
-function fitOptions(insetLeft: boolean): L.FitBoundsOptions {
+const DOCK_PAD = 16 + 352 + 40;
+
+function fitOptions(map: L.Map, insetLeft: boolean): L.FitBoundsOptions {
+  const { x, y } = map.getSize();
+  const left = insetLeft ? Math.min(DOCK_PAD, Math.max(120, Math.floor(x * 0.44))) : 56;
+  const top = 96;
+  const right = 68;
+  const bottom = 108;
   return {
-    paddingTopLeft: [insetLeft ? 408 : 72, 88],
-    paddingBottomRight: [72, 104],
+    paddingTopLeft: [Math.min(left, Math.max(0, x - 160)), Math.min(top, Math.max(0, y - 160))],
+    paddingBottomRight: [Math.min(right, Math.max(0, x - 160)), Math.min(bottom, Math.max(0, y - 160))],
+    maxZoom: 15,
     animate: false,
     duration: 0,
   };
 }
 
 function fitMap(map: L.Map, bounds: L.LatLngBoundsExpression, insetLeft: boolean) {
+  const size = map.getSize();
+  if (size.x < 80 || size.y < 80) return;
   const box = bounds instanceof L.LatLngBounds ? bounds : L.latLngBounds(bounds as L.LatLngExpression[]);
-  map.fitBounds(box, fitOptions(insetLeft));
+  map.fitBounds(box, fitOptions(map, insetLeft));
 }
 
 function pinIcon(kind: 'from' | 'to') {
@@ -118,8 +128,15 @@ function Controls({
   }, []);
 
   useEffect(() => {
-    if (!bounds || fitKey !== 'pins') return;
-    fitMap(map, bounds, insetLeft);
+    if (!bounds) return;
+    const run = () => fitMap(map, bounds, insetLeft);
+    run();
+    const later = window.setTimeout(run, 120);
+    map.on('resize', run);
+    return () => {
+      window.clearTimeout(later);
+      map.off('resize', run);
+    };
   }, [bounds, map, fitKey, insetLeft]);
 
   function locate() {
@@ -262,14 +279,13 @@ export default function MapView() {
   const others = plan?.routes.filter((r) => r.id !== selected) ?? [];
 
   const bounds = useMemo<L.LatLngBoundsExpression | null>(() => {
-    if (active) return routePoints(active) as L.LatLngBoundsExpression;
-    if (from && to) {
-      return [
-        [from.lat, from.lng],
-        [to.lat, to.lng],
-      ];
-    }
-    return null;
+    const pts: L.LatLngExpression[] = [];
+    if (active) pts.push(...(routePoints(active) as L.LatLngExpression[]));
+    else if (from && to) pts.push([from.lat, from.lng], [to.lat, to.lng]);
+    if (from) pts.push([from.lat, from.lng]);
+    if (to) pts.push([to.lat, to.lng]);
+    if (pts.length < 2) return null;
+    return L.latLngBounds(pts);
   }, [active, from, to]);
 
   const activeLine = useMemo(() => (active ? routePoints(active) : []), [active]);

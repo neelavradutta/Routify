@@ -199,7 +199,7 @@ export default function RouteRail() {
           }}
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.97 }}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-violet-800 transition-colors duration-200 hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-700 transition-colors duration-200 hover:border-red-300 hover:bg-red-100 hover:text-red-800"
         >
           <LogOut size={15} strokeWidth={2.25} />
         </motion.button>
