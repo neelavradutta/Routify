@@ -41,7 +41,7 @@ function FilterButton({
       onClick={onClick}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.985 }}
-      className="relative flex w-full items-start gap-3 overflow-hidden rounded-xl border border-zinc-900 bg-white px-3 py-2.5 text-left"
+      className="relative flex w-full items-start gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left"
     >
       <motion.span
         aria-hidden
@@ -125,7 +125,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
           }}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isStart ? 'Connaught Place' : 'Khan Market'}
-          className={`field pl-12 pr-9 ${active ? 'border-zinc-900' : ''}`}
+          className={`field pl-12 pr-9 ${active ? 'border-slate-400' : ''}`}
           autoComplete="off"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
@@ -186,15 +186,15 @@ export default function RouteRail() {
   const [spin, setSpin] = useState(0);
 
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-zinc-900 bg-panel">
-      <header className="flex items-center justify-between border-b-2 border-zinc-900 px-5 py-4">
+    <aside className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-panel">
+      <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
         <Logo size={36} />
         <motion.button
           type="button"
           initial="rest"
           whileHover="on"
           whileTap="on"
-          className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-900 bg-white text-ink"
+          className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white text-ink"
           title={email ? `Sign out ${email}` : 'Sign out'}
           onClick={() => {
             signOut();
@@ -217,7 +217,7 @@ export default function RouteRail() {
         </motion.button>
       </header>
 
-      <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+      <div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto px-5 py-5">
         <section>
           <div className="relative">
             <PlaceField which="from" />
@@ -244,9 +244,6 @@ export default function RouteRail() {
 
             <PlaceField which="to" />
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-muted">
-            Drop pins on map to select locations.
-          </p>
         </section>
 
         <section className="space-y-2">
@@ -297,46 +294,44 @@ export default function RouteRail() {
           />
         </section>
 
-        <section className="space-y-2">
-          <motion.button
-            type="button"
-            className="btn-primary"
-            onClick={() => void run()}
-            disabled={!canRoute}
-            whileHover={canRoute ? { y: -2 } : undefined}
-            whileTap={canRoute ? { scale: 0.985 } : undefined}
-          >
-            {planning ? <Loader2 size={15} className="animate-spin" /> : null}
-            {planning ? 'Comparing three walks' : 'Get safer routes'}
-            {planning && (
-              <span className="pointer-events-none absolute inset-0 overflow-hidden">
-                <span className="absolute inset-y-0 w-1/3 bg-white/15 animate-shimmer" />
-              </span>
-            )}
-          </motion.button>
-          {(from || to || plan) && (
-            <motion.button type="button" className="btn-ghost w-full" onClick={reset} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
-              Clear
-            </motion.button>
-          )}
-        </section>
-
-        <AnimatePresence initial={false}>
-          {plan && (
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: EASE }}
-              className="space-y-4 border-t border-line pt-5"
+        <section>
+          <div className={`grid gap-2 ${plan ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <motion.button
+              type="button"
+              className="btn-primary disabled:bg-lime-500 disabled:text-zinc-950 disabled:shadow-press"
+              onClick={() => void run()}
+              disabled={!canRoute}
+              whileHover={canRoute ? { y: -2 } : undefined}
+              whileTap={canRoute ? { scale: 0.985 } : undefined}
             >
-              <p className="text-[11px] leading-relaxed text-muted">
-                Scores are estimates from OpenStreetMap lighting, camera and activity data plus area-level crime
-                priors. They describe streets, not people.
-              </p>
-            </motion.section>
-          )}
-        </AnimatePresence>
+              {planning ? <Loader2 size={15} className="animate-spin" /> : null}
+              {planning ? 'Comparing three walks' : 'Get safer routes'}
+              {planning && (
+                <span className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <span className="absolute inset-y-0 w-1/3 bg-white/15 animate-shimmer" />
+                </span>
+              )}
+            </motion.button>
+            <AnimatePresence initial={false}>
+              {plan ? (
+                <motion.button
+                  key="clear"
+                  type="button"
+                  className="btn-ghost w-full py-3"
+                  onClick={reset}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: EASE }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Clear
+                </motion.button>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </section>
       </div>
     </aside>
   );

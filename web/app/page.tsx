@@ -45,10 +45,13 @@ export default function HomePage() {
       <div className="relative z-20 w-[400px] shrink-0 py-5 pl-5">
         <RouteRail />
       </div>
-      <div className="relative min-w-0 flex-1 p-5">
-        <div className="relative h-full overflow-hidden rounded-2xl bg-white">
+      <div className="relative flex min-w-0 flex-1 flex-col px-5 pt-5 pb-0">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-white">
           <MapView />
         </div>
+        <p className="flex h-5 shrink-0 items-center justify-center text-center text-[10px] leading-none text-muted">
+          Scores are estimates from OpenStreetMap lighting, camera and activity data plus area-level crime priors. They describe streets, not people.
+        </p>
       </div>
     </main>
   );
