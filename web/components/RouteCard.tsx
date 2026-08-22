@@ -43,7 +43,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
     <motion.button
       type="button"
       onClick={onSelect}
-      initial={{ opacity: 0, x: -28 }}
+      initial={false}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.38, delay: 0.08 + index * 0.07, ease: EASE }}
       whileHover={{ y: selected ? 0 : -1 }}
@@ -112,7 +112,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line/80">
                       <motion.div
-                        initial={{ width: 0 }}
+                        initial={false}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.45, ease: EASE }}
                         className="h-full rounded-full"

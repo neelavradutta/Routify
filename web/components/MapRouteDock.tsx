@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bar,
@@ -199,11 +199,14 @@ export default function MapRouteDock() {
   const [compareOpen, setCompareOpen] = useState(false);
   const showRoutes = planning || Boolean(plan);
 
+  const sawPlan = useRef(false);
+
   useEffect(() => {
-    if (plan) {
+    if (plan && !sawPlan.current) {
       setWhyOpen(true);
       setCompareOpen(false);
     }
+    sawPlan.current = Boolean(plan);
   }, [plan]);
 
   return (
@@ -213,7 +216,7 @@ export default function MapRouteDock() {
           {showRoutes && (
             <motion.div
               key="route-dock"
-              initial={{ x: -56, opacity: 0 }}
+              initial={false}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -40, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.85 }}

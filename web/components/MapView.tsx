@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Crosshair, Maximize2, Moon, MousePointerClick, Sun } from 'lucide-react';
 import { useApp } from '@/store/useApp';
@@ -376,20 +375,14 @@ export default function MapView() {
       <MapRouteDock />
 
       <div className="pointer-events-none absolute inset-x-4 top-4 z-[1100] flex items-start justify-between gap-3">
-        <AnimatePresence>
-          <motion.div
-            key={pick}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className={`pointer-events-auto flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] shadow-panel backdrop-blur-sm ${
-              mapDark ? 'border-white/10 bg-zinc-900/85 text-white' : 'border-slate-200 bg-white/95 text-ink'
-            }`}
-          >
-            <MousePointerClick size={13} strokeWidth={1.75} className="text-violet-700" />
-            Click map to set {pick === 'from' ? 'start' : 'destination'}
-          </motion.div>
-        </AnimatePresence>
+        <div
+          className={`pointer-events-auto flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] shadow-panel backdrop-blur-sm ${
+            mapDark ? 'border-white/10 bg-zinc-900/85 text-white' : 'border-slate-200 bg-white/95 text-ink'
+          }`}
+        >
+          <MousePointerClick size={13} strokeWidth={1.75} className="text-violet-700" />
+          Click map to set {pick === 'from' ? 'start' : 'destination'}
+        </div>
       </div>
     </div>
   );

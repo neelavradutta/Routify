@@ -108,11 +108,7 @@ export const useApp = create<State>()(
 
       setPick: (which) => set({ pick: which }),
 
-      toggle: (key) =>
-        set((s) => ({
-          [key]: !s[key],
-          ...(key === 'showZones' ? {} : { plan: null, explanation: null }),
-        }) as Partial<State>),
+      toggle: (key) => set((s) => ({ [key]: !s[key] }) as Partial<State>),
 
       toggleMap: () => set((s) => ({ mapDark: !s.mapDark })),
 
@@ -131,12 +127,14 @@ export const useApp = create<State>()(
         const { token, from, to, night, avoidUnlit, avoidIsolated } = get();
         if (!token || !from || !to) return;
 
-        set({ planning: true, explanation: null, hovered: null });
+        set({ planning: true, hovered: null });
         try {
           const body: PlanRequest = { from, to, night, avoidUnlit, avoidIsolated };
           const plan = await api.plan(token, body);
           const safest = plan.routes.find((r) => r.id === 'safest') ?? plan.routes[0];
-          set({ plan, selected: safest?.id ?? 'safest' });
+          const keep = get().selected;
+          const selected = plan.routes.some((r) => r.id === keep) ? keep : (safest?.id ?? 'safest');
+          set({ plan, selected });
           void get().explain();
         } catch (err) {
           toast.error(message(err));

@@ -210,7 +210,7 @@ export default function RouteRail() {
           <div className="relative">
             <PlaceField which="from" />
 
-            <div className="relative z-10 my-1 flex items-center justify-center py-1">
+            <div className="relative z-10 mt-3 mb-0 flex items-center justify-center py-1">
               <span className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-lime-500 via-slate-200 to-rose-400" />
               <motion.button
                 type="button"
@@ -236,11 +236,12 @@ export default function RouteRail() {
 
         <section className="space-y-2">
           <p className="label">Time of day</p>
-          <div className="relative grid grid-cols-2 rounded-xl border border-slate-200 bg-white p-1">
+          <div className="relative grid h-10 grid-cols-2 rounded-xl border border-slate-200 bg-white p-1">
             <motion.span
               aria-hidden
-              className="pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-sky-100"
-              animate={{ x: night ? '100%' : '0%' }}
+              className="pointer-events-none absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-lg bg-sky-100"
+              initial={false}
+              animate={{ left: night ? 'calc(50% + 2px)' : '4px' }}
               transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.65 }}
             />
             {[
