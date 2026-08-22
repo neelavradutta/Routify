@@ -67,7 +67,7 @@ export const useApp = create<State>()(
       avoidIsolated: false,
 
       plan: null,
-      selected: 'fast',
+      selected: 'safest',
       hovered: null,
       showZones: true,
 
@@ -116,7 +116,12 @@ export const useApp = create<State>()(
 
       toggleMap: () => set((s) => ({ mapDark: !s.mapDark })),
 
-      select: (id) => set({ selected: id, explanation: null }),
+      select: (id) => {
+        const { plan, selected } = get();
+        if (!id || id === selected) return;
+        if (plan && !plan.routes.some((route) => route.id === id)) return;
+        set({ selected: id, explanation: null });
+      },
 
       hover: (index) => set({ hovered: index }),
 
@@ -130,8 +135,8 @@ export const useApp = create<State>()(
         try {
           const body: PlanRequest = { from, to, night, avoidUnlit, avoidIsolated };
           const plan = await api.plan(token, body);
-          const first = plan.routes[0];
-          set({ plan, selected: first?.id ?? 'fast' });
+          const safest = plan.routes.find((r) => r.id === 'safest') ?? plan.routes[0];
+          set({ plan, selected: safest?.id ?? 'safest' });
           void get().explain();
         } catch (err) {
           toast.error(message(err));

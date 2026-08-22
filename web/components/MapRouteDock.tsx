@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bar,
@@ -10,10 +11,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import RouteCard from '@/components/RouteCard';
 import { formatDistance, SCORE_COLORS, scoreTone } from '@/lib/api';
 
+const CARD_ORDER = ['safest', 'balanced', 'fast'];
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 function CompareTip({
@@ -63,7 +66,7 @@ function Comparison({
   return (
     <div className="flex flex-col">
       <div
-        className="h-[7.25rem] w-full select-none"
+          className="h-[5.5rem] w-full select-none"
         onClick={(event) => event.preventDefault()}
         onMouseDown={(event) => event.preventDefault()}
       >
@@ -110,7 +113,10 @@ function Comparison({
               radius={[3, 3, 0, 0]}
               maxBarSize={18}
               cursor="default"
-              isAnimationActive={false}
+              isAnimationActive
+              animationBegin={80}
+              animationDuration={720}
+              animationEasing="ease-out"
             >
               {data.map((row) => (
                 <Cell key={row.name} fill={SCORE_COLORS[scoreTone(row.safety)]} style={{ outline: 'none' }} />
@@ -124,7 +130,10 @@ function Comparison({
               radius={[3, 3, 0, 0]}
               maxBarSize={18}
               cursor="default"
-              isAnimationActive={false}
+              isAnimationActive
+              animationBegin={140}
+              animationDuration={720}
+              animationEasing="ease-out"
             />
           </BarChart>
         </ResponsiveContainer>
@@ -143,74 +152,220 @@ function Comparison({
   );
 }
 
-export default function MapRouteDock() {
-  const { plan, selected, planning, select, explain } = useApp();
-  const fastest = plan ? plan.routes.reduce((a, b) => (a.duration <= b.duration ? a : b)) : null;
-  const open = planning || Boolean(plan);
+function WhyPoints({ text, refreshKey }: { text?: string; refreshKey: string }) {
+  const points = (text ?? 'Pick a route to see why we chose it.')
+    .split('\n')
+    .map((line) => line.replace(/^[-*•]\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 5);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="route-dock"
-          initial={{ x: -56, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -40, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.85 }}
-          className="pointer-events-none absolute bottom-16 left-4 top-14 z-[1100] w-[min(22rem,calc(100%-5.5rem))]"
-        >
-          <div className="pointer-events-auto max-h-full space-y-1.5 overflow-visible pr-0.5">
-            {plan && fastest
-              ? plan.routes.map((route, index) => (
-                  <RouteCard
-                    key={route.id}
-                    route={route}
-                    fastest={fastest}
-                    selected={route.id === selected}
-                    index={index}
-                    onSelect={() => {
-                      select(route.id);
-                      void explain();
-                    }}
-                  />
-                ))
-              : [0, 1, 2].map((index) => (
-                  <motion.div
-                    key={`sk-${index}`}
-                    initial={{ opacity: 0, x: -24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.32, delay: index * 0.07, ease: EASE }}
-                    className="h-[4.5rem] rounded-xl border border-line bg-white/90 shadow-panel"
-                  >
-                    <div className="flex h-full items-center gap-3 px-3.5">
-                      <span className="h-11 w-11 animate-pulse rounded-xl bg-line" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3 w-20 animate-pulse rounded bg-line" />
-                        <div className="h-2.5 w-32 animate-pulse rounded bg-line" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-
-            {plan && (
-              <motion.div
-                initial={{ opacity: 0, x: -24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.38, delay: 0.32, ease: EASE }}
-                className="rounded-xl border border-line bg-white px-2.5 py-2 shadow-panel"
-              >
-                <div className="mb-1 flex items-end justify-between gap-2">
-                  <p className="font-serif text-[13px] leading-tight text-ink">Safety against time</p>
-                  <p className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
-                    {plan.zones.length} Flagged Unsafe
-                  </p>
-                </div>
-                <Comparison routes={plan.routes} />
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-      )}
+    <AnimatePresence mode="wait">
+      <motion.ul
+        key={refreshKey}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.32, ease: EASE }}
+        className="space-y-1.5 text-[12px] leading-snug text-ink"
+      >
+        {points.map((line, i) => (
+          <motion.li
+            key={`${refreshKey}-${i}-${line}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.34, delay: 0.05 + i * 0.07, ease: EASE }}
+            className="flex gap-2"
+          >
+            <ArrowRight size={12} strokeWidth={2.25} className="mt-0.5 shrink-0 text-zinc-700" />
+            <span>{line}</span>
+          </motion.li>
+        ))}
+      </motion.ul>
     </AnimatePresence>
+  );
+}
+
+export default function MapRouteDock() {
+  const { plan, selected, planning, select, explain, explanation, explaining, from, to, pick, setPick, mapDark } = useApp();
+  const fastest = plan ? plan.routes.reduce((a, b) => (a.duration <= b.duration ? a : b)) : null;
+  const stacked = plan
+    ? [...plan.routes].sort((a, b) => CARD_ORDER.indexOf(a.id) - CARD_ORDER.indexOf(b.id))
+    : [];
+  const expandedId = stacked.some((item) => item.id === selected) ? selected : stacked[0]?.id;
+  const [panel, setPanel] = useState<'compare' | 'why' | null>('why');
+  const compareOpen = panel === 'compare';
+  const whyOpen = panel === 'why';
+  const showRoutes = planning || Boolean(plan);
+
+  useEffect(() => {
+    if (plan) setPanel('why');
+  }, [plan]);
+
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-4 top-14 z-[1100] flex w-[min(22rem,calc(100%-5.5rem))] flex-col">
+      <div className="pointer-events-auto min-h-0 flex-1 space-y-1.5 overflow-y-auto overflow-x-visible pr-0.5">
+        <AnimatePresence>
+          {showRoutes && (
+            <motion.div
+              key="route-dock"
+              initial={{ x: -56, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -40, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.85 }}
+              className="space-y-1.5"
+            >
+              {plan && fastest
+                ? stacked.map((route, index) => (
+                    <RouteCard
+                      key={route.id}
+                      route={route}
+                      fastest={fastest}
+                      selected={route.id === expandedId}
+                      index={index}
+                      onSelect={() => {
+                        if (route.id === expandedId) return;
+                        select(route.id);
+                        void explain();
+                      }}
+                    />
+                  ))
+                : [0, 1, 2].map((index) => (
+                    <motion.div
+                      key={`sk-${index}`}
+                      initial={{ opacity: 0, x: -24 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.32, delay: index * 0.07, ease: EASE }}
+                      className="h-[4.5rem] rounded-xl border border-line bg-white/90 shadow-panel"
+                    >
+                      <div className="flex h-full items-center gap-3 px-3.5">
+                        <span className="h-11 w-11 animate-pulse rounded-xl bg-line" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-20 animate-pulse rounded bg-line" />
+                          <div className="h-2.5 w-32 animate-pulse rounded bg-line" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+              {plan ? (
+                <div className="rounded-xl border border-line bg-white shadow-panel">
+                  <button
+                    type="button"
+                    onClick={() => setPanel(whyOpen ? null : 'why')}
+                    className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
+                    aria-expanded={whyOpen}
+                  >
+                    <p className="font-serif text-[13px] leading-tight text-ink">Why this route</p>
+                    <motion.span
+                      animate={{ rotate: whyOpen ? 180 : 0 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-500"
+                    >
+                      <ChevronDown size={16} strokeWidth={2} />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {whyOpen && (
+                      <motion.div
+                        key="why-body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                        className="overflow-hidden"
+                      >
+                        <div className="border-t border-line px-2.5 py-2">
+                          <AnimatePresence mode="wait">
+                            {explaining && !explanation ? (
+                              <motion.div
+                                key={`why-load-${expandedId}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.28, ease: EASE }}
+                                className="space-y-2 py-1"
+                              >
+                                <div className="h-2.5 w-full animate-pulse rounded bg-line" />
+                                <div className="h-2.5 w-11/12 animate-pulse rounded bg-line" />
+                                <div className="h-2.5 w-9/12 animate-pulse rounded bg-line" />
+                              </motion.div>
+                            ) : (
+                              <WhyPoints
+                                key={`why-${expandedId}`}
+                                refreshKey={expandedId ?? 'why'}
+                                text={explanation?.text}
+                              />
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : null}
+              {plan ? (
+                <div className="rounded-xl border border-line bg-white shadow-panel">
+                  <button
+                    type="button"
+                    onClick={() => setPanel(compareOpen ? null : 'compare')}
+                    className="flex w-full items-center gap-2 px-2.5 py-2 text-left"
+                    aria-expanded={compareOpen}
+                  >
+                    <p className="min-w-0 flex-1 font-serif text-[13px] leading-tight text-ink">Safety Vs Time</p>
+                    <p className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
+                      {plan.zones.length} Flagged Unsafe
+                    </p>
+                    <motion.span
+                      animate={{ rotate: compareOpen ? 180 : 0 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center text-zinc-500"
+                    >
+                      <ChevronDown size={16} strokeWidth={2} />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {compareOpen && (
+                      <motion.div
+                        key="compare-body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                        className="overflow-hidden"
+                      >
+                        <div className="border-t border-line px-2.5 py-2">
+                          <Comparison key={`chart-${panel}`} routes={plan.routes} />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : null}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="pointer-events-auto mt-1.5 flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={() => setPick('from')}
+          aria-label={from ? `Start ${from.label}` : 'Start unset'}
+          className={`chip ${pick === 'from' ? 'border-violet-700 bg-violet-50 text-violet-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
+        >
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#5B21B6' }} />
+          Start
+        </button>
+        <button
+          type="button"
+          onClick={() => setPick('to')}
+          aria-label={to ? `Destination ${to.label}` : 'Destination unset'}
+          className={`chip ${pick === 'to' ? 'border-red-600 bg-red-50 text-red-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
+        >
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#DC2626' }} />
+          Destination
+        </button>
+      </div>
+    </div>
   );
 }

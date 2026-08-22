@@ -362,29 +362,6 @@ export default function MapView() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 z-[1100] flex items-end justify-between gap-3">
-        <div className="pointer-events-auto flex max-w-[70%] flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setPick('from')}
-            aria-label={from ? `Start ${from.label}` : 'Start unset'}
-            className={`chip ${pick === 'from' ? 'border-violet-700 bg-violet-50 text-violet-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
-          >
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#5B21B6' }} />
-            Start
-          </button>
-          <button
-            type="button"
-            onClick={() => setPick('to')}
-            className={`chip ${pick === 'to' ? 'border-red-600 bg-red-50 text-red-950' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
-            aria-label={to ? `Destination ${to.label}` : 'Destination unset'}
-          >
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#DC2626' }} />
-            Destination
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

@@ -60,36 +60,29 @@ function safetyFeel(score) {
 /** Deterministic wording used when no model key is configured, or the model call fails. */
 function template(f) {
   const s = f.selected;
-  const lines = [];
-
-  lines.push(`About ${s.minutes} min walk (${walkKm(s.metres)}).`);
-  lines.push(`Safety score ${s.safetyScore}/100 — ${safetyFeel(s.safetyScore)}.`);
-
-  if (s.extraMinutesVsFastest > 0) {
-    lines.push(`Takes about ${s.extraMinutesVsFastest} extra min than the fastest option.`);
-  } else {
-    lines.push('This is the fastest of the three.');
-  }
-
-  lines.push(`Street lights on about ${s.litPercent}% of the way.`);
-  lines.push(`Quiet / empty-feeling streets: about ${s.isolationPercent}%.`);
-  lines.push(`Cameras along about ${s.cameraCoveragePercent}% of the way.`);
-  lines.push(`Crime risk on this path: ${s.crimeExposurePercent}% (lower is better).`);
+  const lines = [
+    `About ${s.minutes} min walk (${walkKm(s.metres)}).`,
+    `Safety score ${s.safetyScore}/100 — ${safetyFeel(s.safetyScore)}.`,
+    s.extraMinutesVsFastest > 0
+      ? `Takes about ${s.extraMinutesVsFastest} extra min than the fastest option.`
+      : 'This is the fastest of the three.',
+    `Street lights on about ${s.litPercent}% of the way.`,
+  ];
 
   if (s.weakestStretches.length) {
     const worst = s.weakestStretches[0];
     lines.push(`Be careful on ${worst.name} — a short weaker bit (~${worst.length} m).`);
+  } else {
+    lines.push(`Cameras along about ${s.cameraCoveragePercent}% of the way.`);
   }
 
-  if (f.timeOfDay === 'night') lines.push('This is a night walk, so lights matter more.');
-
-  return lines.join('\n');
+  return lines.slice(0, 5).join('\n');
 }
 
 const SYSTEM_PROMPT = `You explain a walking route to a normal person in Delhi. They are not an engineer.
 Rules:
 - Use only the numbers in the JSON. Never invent streets, incidents or news.
-- Write 5 to 7 very short bullet lines. One idea per line. Simple everyday English.
+- Write exactly 5 very short bullet lines. Never more. One idea per line. Simple everyday English.
 - No jargon: do not say modelled, exposure, evidence, priors, percentage of length, isolated as a technical term.
 - Do say: walk time, safety score, street lights, quiet streets, cameras, crime risk, be careful on [street name].
 - Lower crime % is better. Higher lights and cameras is better.
@@ -129,7 +122,7 @@ async function callModel(f) {
 
 export async function explainPlan(plan, selectedId) {
   const f = facts(plan, selectedId);
-  const key = createHash('sha1').update(`v2:${JSON.stringify(f)}`).digest('hex');
+  const key = createHash('sha1').update(`v3:${JSON.stringify(f)}`).digest('hex');
   if (cache.has(key)) return cache.get(key);
 
   const ai = await callModel(f);

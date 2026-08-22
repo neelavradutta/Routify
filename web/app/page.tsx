@@ -42,11 +42,11 @@ export default function HomePage() {
 
   return (
     <main className="flex h-dvh overflow-hidden bg-ground">
-      <div className="relative z-20 w-[400px] shrink-0">
+      <div className="relative z-20 w-[400px] shrink-0 py-5 pl-5">
         <RouteRail />
       </div>
       <div className="relative min-w-0 flex-1 p-5">
-        <div className="relative h-full overflow-hidden rounded-2xl shadow-lift">
+        <div className="relative h-full overflow-hidden rounded-2xl bg-white">
           <MapView />
         </div>
       </div>

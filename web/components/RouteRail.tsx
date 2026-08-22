@@ -10,7 +10,6 @@ import {
   MapPin,
   Moon,
   Search,
-  Sparkles,
   Sun,
   Flag,
   Lightbulb,
@@ -116,6 +115,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
           {isStart ? <MapPin size={15} strokeWidth={1.75} /> : <Flag size={15} strokeWidth={1.75} />}
         </span>
+        <span className="pointer-events-none absolute left-9 top-1/2 h-4 w-px -translate-y-1/2 bg-zinc-300" />
         <input
           id={`place-${which}`}
           value={query}
@@ -125,7 +125,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
           }}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isStart ? 'Connaught Place' : 'Khan Market'}
-          className={`field pl-10 pr-9 ${active ? 'border-zinc-900' : ''}`}
+          className={`field pl-12 pr-9 ${active ? 'border-zinc-900' : ''}`}
           autoComplete="off"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
@@ -164,30 +164,6 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
   );
 }
 
-function WhyPoints({ text }: { text?: string }) {
-  const points = (text ?? 'Pick a route to see why we chose it.')
-    .split('\n')
-    .map((line) => line.replace(/^[-*•]\s*/, '').trim())
-    .filter(Boolean);
-
-  return (
-    <ul className="space-y-2 text-[13px] leading-snug text-ink">
-      {points.map((line, i) => (
-        <motion.li
-          key={`${i}-${line}`}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.34, delay: 0.04 + i * 0.09, ease: EASE }}
-          className="flex gap-2"
-        >
-          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-lime-600" />
-          <span>{line}</span>
-        </motion.li>
-      ))}
-    </ul>
-  );
-}
-
 export default function RouteRail() {
   const router = useRouter();
   const {
@@ -199,8 +175,6 @@ export default function RouteRail() {
     avoidIsolated,
     plan,
     planning,
-    explanation,
-    explaining,
     toggle,
     swap,
     reset,
@@ -212,8 +186,8 @@ export default function RouteRail() {
   const [spin, setSpin] = useState(0);
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-zinc-900 bg-panel">
-      <header className="flex items-center justify-between border-b border-line px-5 py-4">
+    <aside className="flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-zinc-900 bg-panel">
+      <header className="flex items-center justify-between border-b-2 border-zinc-900 px-5 py-4">
         <Logo size={36} />
         <motion.button
           type="button"
@@ -356,25 +330,6 @@ export default function RouteRail() {
               transition={{ duration: 0.28, ease: EASE }}
               className="space-y-4 border-t border-line pt-5"
             >
-              <div className="card p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="label">Why this route</p>
-                  <span className="chip !py-0.5">
-                    <Sparkles size={11} strokeWidth={1.75} />
-                    {explanation?.source === 'ai' ? 'AI summary' : 'From route data'}
-                  </span>
-                </div>
-                {explaining && !explanation ? (
-                  <div className="space-y-2 py-1">
-                    <div className="h-2.5 w-full animate-pulse rounded bg-line" />
-                    <div className="h-2.5 w-11/12 animate-pulse rounded bg-line" />
-                    <div className="h-2.5 w-9/12 animate-pulse rounded bg-line" />
-                  </div>
-                ) : (
-                  <WhyPoints key={explanation?.text ?? 'empty'} text={explanation?.text} />
-                )}
-              </div>
-
               <p className="text-[11px] leading-relaxed text-muted">
                 Scores are estimates from OpenStreetMap lighting, camera and activity data plus area-level crime
                 priors. They describe streets, not people.
