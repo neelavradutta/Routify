@@ -45,52 +45,55 @@ function facts(plan, selectedId) {
   };
 }
 
+function walkKm(m) {
+  if (m < 1000) return `${Math.round(m)} m`;
+  const km = m / 1000;
+  return `${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
+}
+
+function safetyFeel(score) {
+  if (score >= 72) return 'pretty safe';
+  if (score >= 55) return 'okay — stay aware';
+  return 'needs extra care';
+}
+
 /** Deterministic wording used when no model key is configured, or the model call fails. */
 function template(f) {
   const s = f.selected;
   const lines = [];
 
-  lines.push(
-    `${s.option} scores ${s.safetyScore}/100 for a ${s.minutes} minute walk of ${s.metres} m at ${f.timeOfDay}.`,
-  );
+  lines.push(`About ${s.minutes} min walk (${walkKm(s.metres)}).`);
+  lines.push(`Safety score ${s.safetyScore}/100 — ${safetyFeel(s.safetyScore)}.`);
 
-  const delta =
-    s.extraMinutesVsFastest > 0
-      ? `It costs ${s.extraMinutesVsFastest} minute${s.extraMinutesVsFastest === 1 ? '' : 's'} more than the quickest option`
-      : 'It is also the quickest option on offer';
-  lines.push(
-    `${delta}, and about ${s.litPercent}% of its length is on streets with lighting evidence, with ${s.isolationPercent}% reading as isolated.`,
-  );
+  if (s.extraMinutesVsFastest > 0) {
+    lines.push(`Takes about ${s.extraMinutesVsFastest} extra min than the fastest option.`);
+  } else {
+    lines.push('This is the fastest of the three.');
+  }
 
-  lines.push(
-    `Camera coverage along the way is ${s.cameraCoveragePercent}% and modelled crime exposure is ${s.crimeExposurePercent}%.`,
-  );
+  lines.push(`Street lights on about ${s.litPercent}% of the way.`);
+  lines.push(`Quiet / empty-feeling streets: about ${s.isolationPercent}%.`);
+  lines.push(`Cameras along about ${s.cameraCoveragePercent}% of the way.`);
+  lines.push(`Crime risk on this path: ${s.crimeExposurePercent}% (lower is better).`);
 
   if (s.weakestStretches.length) {
     const worst = s.weakestStretches[0];
-    lines.push(`The weakest stretch is ${worst.name} at ${worst.score}/100 over roughly ${worst.length} m; stay alert there.`);
+    lines.push(`Be careful on ${worst.name} — a short weaker bit (~${worst.length} m).`);
   }
 
-  if (f.alternatives.length) {
-    const best = f.alternatives.reduce((a, b) => (a.safetyScore >= b.safetyScore ? a : b));
-    lines.push(
-      `${best.option} is the closest alternative at ${best.safetyScore}/100 and ${best.minutes} minutes.`,
-    );
-  }
+  if (f.timeOfDay === 'night') lines.push('This is a night walk, so lights matter more.');
 
-  if (f.filters.length) lines.push(`Filters applied: ${f.filters.join(', ')}.`);
-
-  return lines.join(' ');
+  return lines.join('\n');
 }
 
-const SYSTEM_PROMPT = `You explain why a walking route was scored as safer to a pedestrian in Delhi.
+const SYSTEM_PROMPT = `You explain a walking route to a normal person in Delhi. They are not an engineer.
 Rules:
-- Use only the numbers in the JSON you are given. Never invent incidents, place names, statistics or news.
-- 4 to 6 sentences, plain English, calm and practical. No bullet points, no headings, no markdown.
-- Compare the chosen option against the alternatives on safety score, minutes and distance.
-- Name the specific weak stretches from the data and say what makes them weak (lighting, isolation, crime exposure, camera coverage).
-- Say plainly that scores are estimates from OpenStreetMap signals and area-level crime priors, not a guarantee.
-- Never blame or describe any person. No alarming or dramatic language.`;
+- Use only the numbers in the JSON. Never invent streets, incidents or news.
+- Write 5 to 7 very short bullet lines. One idea per line. Simple everyday English.
+- No jargon: do not say modelled, exposure, evidence, priors, percentage of length, isolated as a technical term.
+- Do say: walk time, safety score, street lights, quiet streets, cameras, crime risk, be careful on [street name].
+- Lower crime % is better. Higher lights and cameras is better.
+- No paragraphs. No headings. Each line starts with "- ".`;
 
 async function callModel(f) {
   const key = process.env.OPENAI_API_KEY;
@@ -126,7 +129,7 @@ async function callModel(f) {
 
 export async function explainPlan(plan, selectedId) {
   const f = facts(plan, selectedId);
-  const key = createHash('sha1').update(JSON.stringify(f)).digest('hex');
+  const key = createHash('sha1').update(`v2:${JSON.stringify(f)}`).digest('hex');
   if (cache.has(key)) return cache.get(key);
 
   const ai = await callModel(f);

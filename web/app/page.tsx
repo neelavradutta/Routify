@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Compass } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import RouteRail from '@/components/RouteRail';
+import Logo from '@/components/Logo';
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -33,10 +33,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 text-sm text-muted"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-violet-800 text-white">
-            <span className="absolute inset-0 rounded-lg bg-violet-400/50 animate-pulseRing" />
-            <Compass size={16} strokeWidth={1.75} />
-          </span>
+          <Logo size={36} withWord={false} />
           Opening the map
         </motion.span>
       </main>

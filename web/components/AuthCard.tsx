@@ -5,16 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Compass, Loader2 } from 'lucide-react';
+import { Footprints, Loader2, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { ApiError } from '@/lib/api';
+import Logo from '@/components/Logo';
 
 type Props = { mode: 'login' | 'register' };
 
 const COPY = {
   login: {
     title: 'Welcome back',
-    subtitle: 'Sign in to compare Fastest, Balanced and Safest walks.',
+    subtitle: 'Sign in to pick a safer walk.',
     action: 'Sign in',
     switchText: 'New here?',
     switchLink: '/register',
@@ -22,7 +23,7 @@ const COPY = {
   },
   register: {
     title: 'Create an account',
-    subtitle: 'Email and password. Then the map.',
+    subtitle: 'A minute to start. Then the map.',
     action: 'Create account',
     switchText: 'Already registered?',
     switchLink: '/login',
@@ -63,34 +64,33 @@ export default function AuthCard({ mode }: Props) {
           }}
         />
         <div className="relative">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-800 text-white shadow-press">
-              <Compass size={18} strokeWidth={1.75} />
-            </span>
-            <div>
-              <p className="font-serif text-xl leading-none text-ink">Safe Routes</p>
-              <p className="mt-1.5 text-xs tracking-wide text-muted">Central Delhi · on foot</p>
-            </div>
-          </div>
+          <Logo size={40} wordClass="font-serif text-xl leading-none text-ink" />
           <h1 className="mt-16 max-w-md font-serif text-[42px] leading-[1.12] text-ink">
-            The shortest walk is not always the one you take at night.
+            The shortest walk is not always the safest one at night.
           </h1>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
-            Lighting, isolation, cameras and area crime priors sit inside the routing cost — not as a paint layer on
-            top of it.
+            Routify helps you walk through central Delhi with three clear choices — faster, mixed, or safer streets.
           </p>
         </div>
-        <ul className="relative grid max-w-md grid-cols-3 gap-3">
+        <ul className="relative grid max-w-lg grid-cols-3 gap-3">
           {[
-            ['01', 'Compare', 'Three cost models'],
-            ['02', 'Score', 'Per-street 0–100'],
-            ['03', 'Filter', 'Unlit and isolated'],
-          ].map(([n, t, d]) => (
-            <li key={n} className="rounded-xl border border-line/80 bg-panel/70 p-3 backdrop-blur-sm">
-              <p className="text-[10px] font-semibold tracking-[0.16em] text-violet-700">{n}</p>
-              <p className="mt-2 text-sm font-medium text-ink">{t}</p>
-              <p className="mt-1 text-[11px] text-muted">{d}</p>
-            </li>
+            { icon: Footprints, title: 'Three walks', body: 'Fast, mixed, or the safest streets.' },
+            { icon: ShieldCheck, title: 'Easy score', body: '0 to 100 so you know how it feels.' },
+            { icon: SlidersHorizontal, title: 'Your rules', body: 'Skip dark or empty roads if you want.' },
+          ].map((item, i) => (
+            <motion.li
+              key={item.title}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.35)]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-800">
+                <item.icon size={16} strokeWidth={1.75} />
+              </span>
+              <p className="mt-4 text-[16px] font-semibold tracking-tight text-ink">{item.title}</p>
+              <p className="mt-1.5 text-[12px] leading-snug text-muted">{item.body}</p>
+            </motion.li>
           ))}
         </ul>
       </aside>
@@ -102,11 +102,8 @@ export default function AuthCard({ mode }: Props) {
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="w-full max-w-[380px]"
         >
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-800 text-white">
-              <Compass size={16} strokeWidth={1.75} />
-            </span>
-            <p className="font-serif text-lg text-ink">Safe Routes</p>
+          <div className="mb-8 lg:hidden">
+            <Logo size={36} wordClass="font-serif text-lg leading-none text-ink" />
           </div>
 
           <p className="label">Account</p>

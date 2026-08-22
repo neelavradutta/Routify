@@ -15,7 +15,6 @@ import {
 } from 'recharts';
 import {
   ArrowUpDown,
-  Compass,
   Loader2,
   LogOut,
   MapPin,
@@ -29,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { api, SCORE_COLORS, scoreTone, formatDistance, type Place } from '@/lib/api';
+import Logo from '@/components/Logo';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -219,6 +219,30 @@ function Comparison({
   );
 }
 
+function WhyPoints({ text }: { text?: string }) {
+  const points = (text ?? 'Pick a route to see why we chose it.')
+    .split('\n')
+    .map((line) => line.replace(/^[-*•]\s*/, '').trim())
+    .filter(Boolean);
+
+  return (
+    <ul className="space-y-2 text-[13px] leading-snug text-ink">
+      {points.map((line, i) => (
+        <motion.li
+          key={`${i}-${line}`}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.34, delay: 0.04 + i * 0.09, ease: EASE }}
+          className="flex gap-2"
+        >
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-700" />
+          <span>{line}</span>
+        </motion.li>
+      ))}
+    </ul>
+  );
+}
+
 export default function RouteRail() {
   const router = useRouter();
   const {
@@ -246,14 +270,7 @@ export default function RouteRail() {
   return (
     <aside className="flex h-full w-full flex-col border-r border-line bg-panel">
       <header className="flex items-center justify-between border-b border-line px-5 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-800 text-white shadow-press transition-transform duration-200 hover:scale-105">
-            <Compass size={16} strokeWidth={1.75} />
-          </span>
-          <div>
-            <p className="font-serif text-[17px] leading-none text-ink">Routify</p>
-          </div>
-        </div>
+        <Logo size={36} />
         <motion.button
           type="button"
           className="btn-icon !h-9 !w-9 !rounded-lg"
@@ -412,9 +429,7 @@ export default function RouteRail() {
                     <div className="h-2.5 w-9/12 animate-pulse rounded bg-line" />
                   </div>
                 ) : (
-                  <p className="font-serif text-[15px] leading-relaxed text-ink">
-                    {explanation?.text ?? 'Select a route to see the reasoning behind its score.'}
-                  </p>
+                  <WhyPoints key={explanation?.text ?? 'empty'} text={explanation?.text} />
                 )}
               </div>
 

@@ -16,9 +16,8 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: 'Safe Routes — safety-weighted walking directions',
-  description:
-    'Pedestrian navigation for central Delhi that weighs lighting, isolation, camera coverage and crime exposure alongside distance and time.',
+  title: 'Routify — safer walking in Delhi',
+  description: 'Pick a faster, mixed, or safer walk through central Delhi.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

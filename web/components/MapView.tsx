@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -17,15 +17,19 @@ const ROUTE_RED_GHOST = '#F87171';
 const CENTER: [number, number] = [28.6139, 77.2295];
 const BBOX = { south: 28.55, west: 77.15, north: 28.68, east: 77.28 };
 const DRAW_MS = 3400;
-const FLY_MS = 1.2;
 
 function fitOptions(insetLeft: boolean): L.FitBoundsOptions {
   return {
     paddingTopLeft: [insetLeft ? 408 : 72, 88],
     paddingBottomRight: [72, 104],
-    duration: FLY_MS,
-    easeLinearity: 0.22,
+    animate: false,
+    duration: 0,
   };
+}
+
+function fitMap(map: L.Map, bounds: L.LatLngBoundsExpression, insetLeft: boolean) {
+  const box = bounds instanceof L.LatLngBounds ? bounds : L.latLngBounds(bounds as L.LatLngExpression[]);
+  map.fitBounds(box, fitOptions(insetLeft));
 }
 
 function pinIcon(kind: 'from' | 'to') {
@@ -99,11 +103,10 @@ function Controls({
 }) {
   const map = useMap();
   const { mapDark, toggleMap } = useApp();
-  const fly = fitOptions(insetLeft);
 
   useEffect(() => {
-    if (!bounds) return;
-    map.flyToBounds(bounds, fitOptions(insetLeft));
+    if (!bounds || fitKey !== 'pins') return;
+    fitMap(map, bounds, insetLeft);
   }, [bounds, map, fitKey, insetLeft]);
 
   function locate() {
@@ -130,7 +133,7 @@ function Controls({
       </button>
       <button
         type="button"
-        onClick={() => map.flyToBounds(bounds ?? [[BBOX.south, BBOX.west], [BBOX.north, BBOX.east]], fly)}
+        onClick={() => fitMap(map, bounds ?? [[BBOX.south, BBOX.west], [BBOX.north, BBOX.east]], insetLeft)}
         className="btn-icon"
         title="Fit route"
       >
@@ -172,42 +175,66 @@ function traceAt(pts: [number, number][], t: number): [number, number][] {
   return out;
 }
 
-function TraceRoute({ playKey, positions }: { playKey: string; positions: [number, number][] }) {
-  const [drawn, setDrawn] = useState<[number, number][]>([]);
+function TraceRoute({
+  playKey,
+  positions,
+  insetLeft,
+}: {
+  playKey: string;
+  positions: [number, number][];
+  insetLeft: boolean;
+}) {
+  const map = useMap();
   const ptsRef = useRef(positions);
   ptsRef.current = positions;
 
   useEffect(() => {
     const pts = ptsRef.current;
-    setDrawn(pts.slice(0, 2));
+    if (pts.length < 2) return;
+
+    fitMap(map, pts, insetLeft);
+
     let raf = 0;
-    const origin = performance.now();
+    let startRaf = 0;
+    let halo: L.Polyline | null = null;
+    let line: L.Polyline | null = null;
+    let origin = 0;
+    let dead = false;
+
+    const style = { lineCap: 'round' as const, lineJoin: 'round' as const, interactive: false };
 
     const tick = (now: number) => {
+      if (dead || !halo || !line) return;
       const t = Math.min(1, (now - origin) / DRAW_MS);
-      const eased = 1 - (1 - t) ** 3;
-      setDrawn(traceAt(pts, eased));
+      const drawn = traceAt(pts, 1 - (1 - t) ** 3);
+      halo.setLatLngs(drawn);
+      line.setLatLngs(drawn);
       if (t < 1) raf = window.requestAnimationFrame(tick);
     };
 
-    raf = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(raf);
-  }, [playKey]);
+    const start = () => {
+      if (dead) return;
+      const seed: L.LatLngExpression[] = [pts[0], pts[1]];
+      halo = L.polyline(seed, { color: '#7F1D1D', weight: 12, opacity: 0.16, ...style }).addTo(map);
+      line = L.polyline(seed, { color: ROUTE_RED, weight: 6, opacity: 1, ...style }).addTo(map);
+      origin = performance.now();
+      raf = window.requestAnimationFrame(tick);
+    };
 
-  if (drawn.length < 2) return null;
+    startRaf = window.requestAnimationFrame(() => {
+      startRaf = window.requestAnimationFrame(start);
+    });
 
-  return (
-    <>
-      <Polyline
-        positions={drawn}
-        pathOptions={{ color: '#7F1D1D', weight: 12, opacity: 0.16, lineCap: 'round', lineJoin: 'round' }}
-      />
-      <Polyline
-        positions={drawn}
-        pathOptions={{ color: ROUTE_RED, weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
-      />
-    </>
-  );
+    return () => {
+      dead = true;
+      window.cancelAnimationFrame(startRaf);
+      window.cancelAnimationFrame(raf);
+      halo?.remove();
+      line?.remove();
+    };
+  }, [playKey, map, insetLeft]);
+
+  return null;
 }
 
 export default function MapView() {
@@ -279,7 +306,7 @@ export default function MapView() {
 
         {active && activeLine.length > 1 && (
           <>
-            <TraceRoute key={active.id} playKey={active.id} positions={activeLine} />
+            <TraceRoute key={active.id} playKey={active.id} positions={activeLine} insetLeft />
             {active.segments.map((segment, i) => (
               <Polyline
                 key={`hit-${active.id}-${i}`}
