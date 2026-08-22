@@ -1,83 +1,28 @@
 import { Router } from 'express';
-import initSqlJs from 'sql.js';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
-
-const dataDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'data');
-mkdirSync(dataDir, { recursive: true });
+import { closeStore, findByEmail, findById, initStore, insertUser, resetStoreForTests } from './auth-store.js';
 
 const DEV_SECRET = 'dev-only-secret-change-me';
 const secret = process.env.JWT_SECRET || DEV_SECRET;
 const TTL = '7d';
 const JWT_OPTS = { algorithm: 'HS256', expiresIn: TTL };
 const VERIFY_OPTS = { algorithms: ['HS256'] };
+const BCRYPT_ROUNDS = 8;
 
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.JWT_SECRET || secret.length < 32 || secret === DEV_SECRET) {
     console.error('Set JWT_SECRET to a random string of at least 32 characters before running in production.');
     process.exit(1);
   }
-}
-
-const dbPath = process.env.AUTH_DB_PATH || join(dataDir, 'users.sqlite');
-const wasmPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm');
-
-/** In-memory SQLite via WASM — no native bindings, safe on Render/Linux. */
-let db = null;
-
-function persist() {
-  writeFileSync(dbPath, Buffer.from(db.export()));
-}
-
-function queryGet(sql, params = []) {
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  if (!stmt.step()) {
-    stmt.free();
-    return null;
+  if (!process.env.DATABASE_URL) {
+    console.warn('WARNING: DATABASE_URL not set — user accounts will be lost when Render restarts.');
   }
-  const row = stmt.getAsObject();
-  stmt.free();
-  return row;
 }
 
-function lastId() {
-  const out = db.exec('SELECT last_insert_rowid() AS id');
-  return Number(out[0]?.values[0]?.[0] ?? 0);
-}
-
-function queryRun(sql, params = []) {
-  db.run(sql, params);
-  const id = lastId();
-  persist();
-  return { lastInsertRowid: id };
-}
-
-export async function initAuth() {
-  const SQL = await initSqlJs({ locateFile: () => wasmPath });
-  db = existsSync(dbPath) ? new SQL.Database(readFileSync(dbPath)) : new SQL.Database();
-
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    password_hash TEXT NOT NULL,
-    full_name TEXT,
-    created_at TEXT NOT NULL
-  )`);
-  try {
-    db.run('ALTER TABLE users ADD COLUMN full_name TEXT');
-  } catch {
-    /* column already exists */
-  }
-  persist();
-}
-
-const DUMMY_HASH = bcrypt.hashSync('invalid-password-timing-pad', 10);
+const DUMMY_HASH = bcrypt.hashSync('invalid-password-timing-pad', BCRYPT_ROUNDS);
 
 const credentials = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address').max(254),
@@ -96,11 +41,11 @@ const registerBody = credentials.extend({
 const sign = (user) =>
   jwt.sign({ sub: user.id, email: user.email, name: user.fullName ?? null }, secret, JWT_OPTS);
 
-function loadUser(id) {
-  return queryGet('SELECT id, email, full_name FROM users WHERE id = ?', [id]);
+export async function initAuth() {
+  await initStore();
 }
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   const header = req.get('authorization') ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
   if (!token) return res.status(401).json({ error: 'Sign in to continue' });
@@ -117,80 +62,85 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Session expired, sign in again' });
   }
 
-  const row = loadUser(id);
-  if (!row) return res.status(401).json({ error: 'Sign in to continue' });
+  try {
+    const row = await findById(id);
+    if (!row) return res.status(401).json({ error: 'Sign in to continue' });
 
-  req.user = {
-    sub: id,
-    email: row.email,
-    name: row.full_name ?? null,
-  };
-  next();
+    req.user = {
+      sub: id,
+      email: row.email,
+      name: row.full_name ?? null,
+    };
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 export const authRouter = Router();
 
 const authBurst = rateLimit({
   windowMs: 15 * 60_000,
-  max: 20,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many sign-in attempts. Wait a few minutes and try again.' },
 });
 
-authRouter.post('/register', authBurst, async (req, res) => {
+authRouter.post('/register', authBurst, async (req, res, next) => {
   const parsed = registerBody.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
 
   const { email, password, fullName } = parsed.data;
-  const hash = await bcrypt.hash(password, 10);
 
   try {
-    const info = queryRun(
-      'INSERT INTO users (email, password_hash, full_name, created_at) VALUES (?, ?, ?, ?)',
-      [email, hash, fullName, new Date().toISOString()],
-    );
+    const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const id = await insertUser({
+      email,
+      password_hash: hash,
+      full_name: fullName,
+      created_at: new Date().toISOString(),
+    });
 
-    const user = { id: info.lastInsertRowid, email, fullName };
+    const user = { id, email, fullName };
     res.status(201).json({ token: sign(user), user });
   } catch (err) {
-    if (String(err?.message ?? '').includes('UNIQUE constraint')) {
+    if (String(err?.message ?? '').includes('UNIQUE') || err?.code === '23505') {
       return res.status(409).json({ error: 'That email is already registered' });
     }
-    throw err;
+    next(err);
   }
 });
 
-authRouter.post('/login', authBurst, async (req, res) => {
+authRouter.post('/login', authBurst, async (req, res, next) => {
   const parsed = credentials.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
 
   const { email, password } = parsed.data;
-  const row = queryGet('SELECT * FROM users WHERE email = ?', [email]);
-  const ok = await bcrypt.compare(password, row?.password_hash ?? DUMMY_HASH);
-  if (!row || !ok) {
-    return res.status(401).json({ error: 'Email or password is incorrect' });
-  }
 
-  const user = { id: Number(row.id), email: row.email, fullName: row.full_name ?? null };
-  res.json({ token: sign(user), user });
-});
-
-authRouter.get('/me', requireAuth, (req, res) => {
-  const row = loadUser(req.user.sub);
-  if (!row) return res.status(401).json({ error: 'Sign in to continue' });
-  res.json({ user: { id: Number(row.id), email: row.email, fullName: row.full_name ?? null } });
-});
-
-/** Test helper — wipes the auth database file. */
-export function resetAuthDbForTests() {
-  if (db) {
-    db.close();
-    db = null;
-  }
   try {
-    unlinkSync(dbPath);
-  } catch {
-    /* fresh run */
+    const row = await findByEmail(email);
+    const ok = await bcrypt.compare(password, row?.password_hash ?? DUMMY_HASH);
+    if (!row || !ok) {
+      return res.status(401).json({ error: 'Email or password is incorrect' });
+    }
+
+    const user = { id: Number(row.id), email: row.email, fullName: row.full_name ?? null };
+    res.json({ token: sign(user), user });
+  } catch (err) {
+    next(err);
   }
-}
+});
+
+authRouter.get('/me', requireAuth, async (req, res, next) => {
+  try {
+    const row = await findById(req.user.sub);
+    if (!row) return res.status(401).json({ error: 'Sign in to continue' });
+    res.json({ user: { id: Number(row.id), email: row.email, fullName: row.full_name ?? null } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+export const resetAuthDbForTests = resetStoreForTests;
+export const closeAuth = closeStore;

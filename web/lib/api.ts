@@ -59,21 +59,29 @@ export type PlanRequest = {
 
 export class ApiError extends Error {}
 
-async function request<T>(path: string, init: RequestInit & { token?: string | null } = {}): Promise<T> {
-  const { token, headers, ...rest } = init;
+async function request<T>(path: string, init: RequestInit & { token?: string | null; timeoutMs?: number } = {}): Promise<T> {
+  const { token, headers, timeoutMs = 90_000, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let res: Response;
 
   try {
     res = await fetch(`${API_BASE}${path}`, {
       ...rest,
+      signal: controller.signal,
       headers: {
         ...(rest.body ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers,
       },
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError('Server is waking up — Render free tier can take up to a minute. Try again.');
+    }
     throw new ApiError('Cannot reach the routing service. Is the API running?');
+  } finally {
+    clearTimeout(timer);
   }
 
   const data = await res.json().catch(() => ({}));
@@ -85,10 +93,10 @@ type Session = { token: string; user: { id: number; email: string; fullName?: st
 
 export const api = {
   register: (email: string, password: string, fullName: string) =>
-    request<Session>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, fullName }) }),
+    request<Session>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, fullName }), timeoutMs: 120_000 }),
 
   login: (email: string, password: string) =>
-    request<Session>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    request<Session>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }), timeoutMs: 120_000 }),
 
   me: (token: string) => request<{ user: Session['user'] }>('/api/auth/me', { token }),
 

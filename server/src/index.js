@@ -77,6 +77,7 @@ app.get('/api/health', (_req, res) => {
     mode: 'india-corridors',
     hotspots: loadCrime().length,
     crimeData: crimeStats(),
+    auth: process.env.DATABASE_URL ? 'postgres' : 'sqlite-file',
   });
 });
 
