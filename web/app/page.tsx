@@ -10,7 +10,7 @@ import RouteRail from '@/components/RouteRail';
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-ground" />,
+  loading: () => <div className="h-full w-full bg-[#0b0b12]" />,
 });
 
 export default function HomePage() {
@@ -48,8 +48,8 @@ export default function HomePage() {
       <div className="relative z-20 w-[400px] shrink-0">
         <RouteRail />
       </div>
-      <div className="relative min-w-0 flex-1 p-3 pl-0">
-        <div className="relative h-full overflow-hidden rounded-2xl border border-line/80 shadow-lift">
+      <div className="relative min-w-0 flex-1 p-3">
+        <div className="relative h-full overflow-hidden rounded-2xl shadow-lift">
           <MapView />
         </div>
       </div>

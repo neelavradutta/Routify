@@ -17,6 +17,7 @@ type State = {
   pick: Endpoint;
 
   night: boolean;
+  mapDark: boolean;
   avoidUnlit: boolean;
   avoidIsolated: boolean;
 
@@ -37,6 +38,7 @@ type State = {
   swap: () => void;
   setPick: (which: Endpoint) => void;
   toggle: (key: 'night' | 'avoidUnlit' | 'avoidIsolated' | 'showZones') => void;
+  toggleMap: () => void;
   select: (id: Route['id']) => void;
   hover: (index: number | null) => void;
   reset: () => void;
@@ -60,11 +62,12 @@ export const useApp = create<State>()(
       pick: 'from',
 
       night: true,
+      mapDark: true,
       avoidUnlit: false,
       avoidIsolated: false,
 
       plan: null,
-      selected: 'safest',
+      selected: 'fast',
       hovered: null,
       showZones: true,
 
@@ -111,6 +114,8 @@ export const useApp = create<State>()(
           ...(key === 'showZones' ? {} : { plan: null, explanation: null }),
         }) as Partial<State>),
 
+      toggleMap: () => set((s) => ({ mapDark: !s.mapDark })),
+
       select: (id) => set({ selected: id, explanation: null }),
 
       hover: (index) => set({ hovered: index }),
@@ -125,8 +130,8 @@ export const useApp = create<State>()(
         try {
           const body: PlanRequest = { from, to, night, avoidUnlit, avoidIsolated };
           const plan = await api.plan(token, body);
-          const safest = plan.routes.find((r) => r.id === 'safest') ?? plan.routes[0];
-          set({ plan, selected: safest.id });
+          const first = plan.routes[0];
+          set({ plan, selected: first?.id ?? 'fast' });
           void get().explain();
         } catch (err) {
           toast.error(message(err));
@@ -160,7 +165,7 @@ export const useApp = create<State>()(
     {
       name: 'safe-routes',
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ token: s.token, email: s.email, night: s.night }),
+      partialize: (s) => ({ token: s.token, email: s.email, night: s.night, mapDark: s.mapDark }),
       onRehydrateStorage: () => () => {
         void useApp.getState().restore();
       },

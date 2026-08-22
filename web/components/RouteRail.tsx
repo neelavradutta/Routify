@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { api, SCORE_COLORS, scoreTone, formatDistance, type Place } from '@/lib/api';
-import RouteCard from '@/components/RouteCard';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -230,7 +229,6 @@ export default function RouteRail() {
     avoidUnlit,
     avoidIsolated,
     plan,
-    selected,
     planning,
     explanation,
     explaining,
@@ -238,13 +236,10 @@ export default function RouteRail() {
     toggle,
     swap,
     reset,
-    select,
     run,
-    explain,
     signOut,
   } = useApp();
 
-  const fastest = plan ? plan.routes.reduce((a, b) => (a.duration <= b.duration ? a : b)) : null;
   const canRoute = Boolean(from && to) && !planning;
   const [spin, setSpin] = useState(0);
 
@@ -383,7 +378,7 @@ export default function RouteRail() {
         </section>
 
         <AnimatePresence initial={false}>
-          {plan && fastest && (
+          {plan && (
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -393,30 +388,13 @@ export default function RouteRail() {
             >
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="label">Options</p>
-                  <p className="mt-1 font-serif text-lg text-ink">Three cost models</p>
+                  <p className="label">Compare</p>
+                  <p className="mt-1 font-serif text-lg text-ink">Safety against time</p>
                 </div>
                 <p className="text-[11px] text-muted">{plan.zones.length} flagged zones</p>
               </div>
 
-              <div className="space-y-2">
-                {plan.routes.map((route, index) => (
-                  <RouteCard
-                    key={route.id}
-                    route={route}
-                    fastest={fastest}
-                    selected={route.id === selected}
-                    index={index}
-                    onSelect={() => {
-                      select(route.id);
-                      void explain();
-                    }}
-                  />
-                ))}
-              </div>
-
               <div className="card p-3.5">
-                <p className="label mb-1">Safety against time</p>
                 <Comparison routes={plan.routes} />
               </div>
 

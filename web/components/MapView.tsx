@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Crosshair, Maximize2, MousePointerClick } from 'lucide-react';
+import { Crosshair, Maximize2, Moon, MousePointerClick, Sun } from 'lucide-react';
 import { useApp } from '@/store/useApp';
 import { api, type Route } from '@/lib/api';
+import Basemap from '@/components/Basemap';
+import MapRouteDock from '@/components/MapRouteDock';
 
 const ROUTE_RED = '#DC2626';
 const ROUTE_RED_GHOST = '#F87171';
@@ -41,6 +43,22 @@ const ZONE_LABEL: Record<string, string> = {
   crime: 'Higher reported risk',
 };
 
+function SizeFixer() {
+  const map = useMap();
+
+  useEffect(() => {
+    const fix = () => map.invalidateSize({ animate: false });
+    const id = window.setTimeout(fix, 80);
+    window.addEventListener('resize', fix);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener('resize', fix);
+    };
+  }, [map]);
+
+  return null;
+}
+
 function ClickToPick() {
   const { token, pick, setPlace } = useApp();
 
@@ -62,6 +80,7 @@ function ClickToPick() {
 
 function Controls({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
   const map = useMap();
+  const { mapDark, toggleMap } = useApp();
 
   useEffect(() => {
     if (!bounds) return;
@@ -84,6 +103,9 @@ function Controls({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
 
   return (
     <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-2">
+      <button type="button" onClick={toggleMap} className="btn-icon" title={mapDark ? 'Light map' : 'Dark map'}>
+        {mapDark ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
+      </button>
       <button type="button" onClick={locate} className="btn-icon" title="Find my location">
         <Crosshair size={16} strokeWidth={1.75} />
       </button>
@@ -138,7 +160,7 @@ function FadePolyline({
 }
 
 export default function MapView() {
-  const { from, to, plan, selected, hover, showZones, pick, setPick } = useApp();
+  const { from, to, plan, selected, hover, showZones, pick, setPick, mapDark } = useApp();
 
   const active = plan?.routes.find((r) => r.id === selected) ?? null;
   const others = plan?.routes.filter((r) => r.id !== selected) ?? [];
@@ -158,7 +180,7 @@ export default function MapView() {
   const activeLine = useMemo(() => (active ? routePoints(active) : []), [active]);
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full overflow-hidden">
       <MapContainer
         center={CENTER}
         zoom={13}
@@ -168,18 +190,16 @@ export default function MapView() {
         fadeAnimation
         markerZoomAnimation
         easeLinearity={0.22}
-        className="h-full w-full"
+        className={`absolute inset-0 h-full w-full ${mapDark ? 'map-night' : 'map-day'}`}
+
         maxBounds={[
           [BBOX.south - 0.05, BBOX.west - 0.05],
           [BBOX.north + 0.05, BBOX.east + 0.05],
         ]}
       >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          maxZoom={19}
-        />
+        <Basemap dark={mapDark} />
 
+        <SizeFixer />
         <ClickToPick />
         <Controls bounds={bounds} />
 
@@ -248,6 +268,8 @@ export default function MapView() {
         {to && <Marker position={[to.lat, to.lng]} icon={pinIcon('to')} zIndexOffset={700} />}
       </MapContainer>
 
+      <MapRouteDock />
+
       <div className="pointer-events-none absolute inset-x-4 top-4 z-[1100] flex items-start justify-between gap-3">
         <AnimatePresence>
           <motion.div
@@ -255,7 +277,9 @@ export default function MapView() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 text-[12px] text-ink shadow-panel backdrop-blur-sm"
+            className={`pointer-events-auto flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] shadow-panel backdrop-blur-sm ${
+              mapDark ? 'border-white/10 bg-zinc-900/85 text-white' : 'border-slate-200 bg-white/95 text-ink'
+            }`}
           >
             <MousePointerClick size={13} strokeWidth={1.75} className="text-violet-700" />
             Click map to set {pick === 'from' ? 'start' : 'destination'}
@@ -268,7 +292,7 @@ export default function MapView() {
           <button
             type="button"
             onClick={() => setPick('from')}
-            className={`chip ${pick === 'from' ? 'border-violet-400 bg-violet-50 text-violet-900' : ''}`}
+            className={`chip ${pick === 'from' ? 'border-violet-400 bg-violet-50 text-violet-900' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
           >
             <span className="h-2 w-2 rounded-full bg-violet-600" />
             {from?.label ?? 'Start unset'}
@@ -276,7 +300,7 @@ export default function MapView() {
           <button
             type="button"
             onClick={() => setPick('to')}
-            className={`chip ${pick === 'to' ? 'border-rose-300 bg-rose-50 text-rose-800' : ''}`}
+            className={`chip ${pick === 'to' ? 'border-rose-300 bg-rose-50 text-rose-800' : mapDark ? '!border-white/15 !bg-zinc-900/80 !text-white' : ''}`}
           >
             <span className="h-2 w-2 rounded-full bg-rose-500" />
             {to?.label ?? 'Destination unset'}
@@ -287,10 +311,16 @@ export default function MapView() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="pointer-events-none rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-panel backdrop-blur-sm"
+            className={`pointer-events-none rounded-xl border px-3 py-2 shadow-panel backdrop-blur-sm ${
+              mapDark ? 'border-white/10 bg-zinc-900/85' : 'border-slate-200 bg-white/95'
+            }`}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{selectedRoute.label}</p>
-            <p className="mt-0.5 text-sm font-semibold tabular-nums text-violet-800">{selectedRoute.safety}/100</p>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${mapDark ? 'text-zinc-400' : 'text-slate-500'}`}>
+              {selectedRoute.label}
+            </p>
+            <p className={`mt-0.5 text-sm font-semibold tabular-nums ${mapDark ? 'text-white' : 'text-violet-800'}`}>
+              {selectedRoute.safety}/100
+            </p>
           </motion.div>
         )}
       </div>

@@ -27,18 +27,14 @@
     @apply ring-2 ring-violet-400/70 ring-offset-2 ring-offset-white;
   }
 
-  ::-webkit-scrollbar {
-    width: 10px;
+  * {
+    scrollbar-width: none;
   }
 
-  ::-webkit-scrollbar-thumb {
-    background: #ddd6fe;
-    border-radius: 999px;
-    border: 2px solid #ffffff;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }
 
@@ -102,10 +98,26 @@
 }
 
 .leaflet-container {
-  @apply bg-[#efeaf8] font-sans;
+  @apply h-full w-full font-sans;
 }
 
-.leaflet-control-attribution {
+.leaflet-container.map-night {
+  background: #1a1a1a;
+}
+
+.leaflet-container.map-day {
+  background: #f8f4f0;
+}
+
+.leaflet-gl-layer {
+  pointer-events: none;
+}
+
+.leaflet-container.map-night .leaflet-control-attribution {
+  @apply !bg-black/50 !text-[10px] !text-slate-300 !backdrop-blur-sm;
+}
+
+.leaflet-container.map-day .leaflet-control-attribution {
   @apply !bg-white/90 !text-[10px] !text-slate-500 !backdrop-blur-sm;
 }
 

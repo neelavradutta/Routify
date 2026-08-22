@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Footprints } from 'lucide-react';
-import { SCORE_COLORS, scoreTone, formatDistance, type Route } from '@/lib/api';
+import { formatDistance, type Route } from '@/lib/api';
 
 type Props = {
   route: Route;
@@ -14,6 +14,12 @@ type Props = {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+const ROUTE_PAINT: Record<string, { fill: string; selected: string }> = {
+  fast: { fill: '#EA580C', selected: 'border-orange-300 bg-orange-50 shadow-panel' },
+  balanced: { fill: '#5B21B6', selected: 'border-violet-300 bg-violet-50 shadow-panel' },
+  safest: { fill: '#0F766E', selected: 'border-teal-300 bg-teal-50 shadow-panel' },
+};
+
 const FACTORS = [
   { key: 'light', label: 'Lit', invert: false },
   { key: 'camera', label: 'Cameras', invert: false },
@@ -22,8 +28,7 @@ const FACTORS = [
 ] as const;
 
 export default function RouteCard({ route, fastest, selected, onSelect, index }: Props) {
-  const tone = scoreTone(route.safety);
-  const color = SCORE_COLORS[tone];
+  const paint = ROUTE_PAINT[route.id] ?? ROUTE_PAINT.balanced;
   const extraMinutes = route.duration - fastest.duration;
   const extraMetres = route.distance - fastest.distance;
 
@@ -32,30 +37,23 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
       type="button"
       onClick={onSelect}
       layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, delay: index * 0.05, ease: EASE }}
+      initial={{ opacity: 0, x: -28 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.38, delay: 0.08 + index * 0.07, ease: EASE }}
       whileHover={{ y: selected ? 0 : -1 }}
       whileTap={{ scale: 0.985 }}
       aria-pressed={selected}
       className={`w-full rounded-xl border px-3.5 py-3.5 text-left transition-shadow duration-200 ease-calm ${
-        selected
-          ? 'border-violet-300 bg-violet-50 shadow-panel'
-          : 'border-line bg-white hover:border-violet-300 hover:shadow-lift'
+        selected ? paint.selected : 'border-line bg-white hover:border-violet-300 hover:shadow-lift'
       }`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="relative">
-            <span
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[15px] font-semibold tabular-nums text-panel shadow-press"
-              style={{ backgroundColor: color }}
-            >
-              {route.safety}
-            </span>
-            <span className="absolute -left-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-semibold text-white">
-              {index + 1}
-            </span>
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[15px] font-semibold tabular-nums text-white shadow-press"
+            style={{ backgroundColor: paint.fill }}
+          >
+            {route.safety}
           </span>
           <div>
             <p className="text-[13px] font-semibold leading-tight text-ink">{route.label}</p>
@@ -85,7 +83,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: EASE }}
+            transition={{ duration: 0.28, ease: EASE }}
             className="overflow-hidden"
           >
             <div className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-line/80 pt-3.5">
@@ -104,7 +102,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
                         animate={{ width: `${Math.round(good * 100)}%` }}
                         transition={{ duration: 0.45, ease: EASE }}
                         className="h-full rounded-full"
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: paint.fill }}
                       />
                     </div>
                   </div>
