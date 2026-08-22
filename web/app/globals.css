@@ -11,11 +11,11 @@
   }
 
   body {
-    @apply bg-ground text-ink font-sans antialiased;
+    @apply bg-white text-ink font-sans antialiased;
   }
 
   ::selection {
-    @apply bg-sage-soft text-ink;
+    @apply bg-teal-100 text-ink;
   }
 
   input,
@@ -24,7 +24,7 @@
   }
 
   :focus-visible {
-    @apply ring-2 ring-sage/45 ring-offset-2 ring-offset-panel;
+    @apply ring-2 ring-teal-400/60 ring-offset-2 ring-offset-white;
   }
 
   ::-webkit-scrollbar {
@@ -32,9 +32,9 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #c9bbaa;
+    background: #cbd5e1;
     border-radius: 999px;
-    border: 2px solid #f4eee4;
+    border: 2px solid #ffffff;
   }
 
   ::-webkit-scrollbar-track {
@@ -44,56 +44,56 @@
 
 @layer components {
   .card {
-    @apply rounded-xl border border-line/90 bg-panel shadow-panel;
+    @apply rounded-xl border border-slate-200 bg-white shadow-panel;
   }
 
   .field {
-    @apply w-full rounded-lg border border-line bg-[#FBF7F0] px-3 py-2.5 text-sm text-ink
-      placeholder:text-muted/60 transition-all duration-200 ease-calm
-      hover:border-[#cbbfae] focus:border-sage focus:bg-[#FFFcf7] focus:shadow-[0_0_0_4px_rgba(58,104,84,0.12)];
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink
+      placeholder:text-slate-400 transition-all duration-200 ease-calm
+      hover:border-teal-300 focus:border-teal-500 focus:shadow-[0_0_0_4px_rgba(13,148,136,0.15)];
   }
 
   .btn-primary {
     @apply relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg
-      bg-sage px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-panel shadow-press
-      transition-all duration-200 ease-calm hover:-translate-y-px hover:bg-sage-dark hover:shadow-lift
+      bg-teal-600 px-4 py-3 text-[13px] font-semibold tracking-[0.02em] text-white shadow-press
+      transition-all duration-200 ease-calm hover:-translate-y-px hover:bg-teal-700 hover:shadow-lift
       active:translate-y-0 active:scale-[0.985] disabled:pointer-events-none disabled:translate-y-0
-      disabled:bg-sage/35 disabled:shadow-none;
+      disabled:bg-teal-600/35 disabled:shadow-none;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-[#FBF7F0]
-      px-3 py-2 text-[13px] font-medium text-muted transition-all duration-200 ease-calm
-      hover:border-[#cbbfae] hover:bg-white/70 hover:text-ink active:scale-[0.98]
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white
+      px-3 py-2 text-[13px] font-medium text-slate-500 transition-all duration-200 ease-calm
+      hover:border-teal-300 hover:text-ink active:scale-[0.98]
       disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-icon {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line/80 bg-panel/95
-      text-muted shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
-      hover:-translate-y-px hover:text-ink hover:shadow-lift active:translate-y-0 active:scale-95;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/95
+      text-slate-500 shadow-panel backdrop-blur-sm transition-all duration-200 ease-calm
+      hover:-translate-y-px hover:text-teal-700 hover:shadow-lift active:translate-y-0 active:scale-95;
   }
 
   .label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-muted;
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-[#FBF7F0] px-2.5 py-1
+    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1
       text-[11px] font-medium text-ink;
   }
 }
 
 .leaflet-container {
-  @apply bg-ground font-sans;
+  @apply bg-sky-50 font-sans;
 }
 
 .leaflet-control-attribution {
-  @apply !bg-panel/85 !text-[10px] !text-muted !backdrop-blur-sm;
+  @apply !bg-white/90 !text-[10px] !text-slate-500 !backdrop-blur-sm;
 }
 
 .leaflet-tooltip {
-  @apply !rounded-lg !border-line !bg-panel !px-2.5 !py-1.5 !text-xs !text-ink !shadow-lift;
+  @apply !rounded-lg !border-slate-200 !bg-white !px-2.5 !py-1.5 !text-xs !text-ink !shadow-lift;
 }
 
 .leaflet-tooltip::before {

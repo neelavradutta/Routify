@@ -115,9 +115,9 @@ export const scoreTone = (score: number) =>
   score >= 72 ? 'good' : score >= 55 ? 'fair' : ('poor' as const);
 
 export const SCORE_COLORS: Record<string, string> = {
-  good: '#3F6F5B',
-  fair: '#C08A2E',
-  poor: '#B54A32',
+  good: '#10B981',
+  fair: '#F59E0B',
+  poor: '#EF4444',
 };
 
 export const formatDistance = (metres: number) =>

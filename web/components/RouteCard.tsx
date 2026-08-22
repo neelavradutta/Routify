@@ -40,8 +40,8 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
       aria-pressed={selected}
       className={`w-full rounded-xl border px-3.5 py-3.5 text-left transition-shadow duration-200 ease-calm ${
         selected
-          ? 'border-sage/40 bg-sage-soft/70 shadow-panel'
-          : 'border-line bg-[#FBF7F0] hover:border-[#cbbfae] hover:shadow-panel'
+          ? 'border-teal-300 bg-teal-50 shadow-panel'
+          : 'border-slate-200 bg-white hover:border-teal-300 hover:shadow-panel'
       }`}
     >
       <div className="flex items-center justify-between gap-3">
@@ -53,7 +53,7 @@ export default function RouteCard({ route, fastest, selected, onSelect, index }:
             >
               {route.safety}
             </span>
-            <span className="absolute -left-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[9px] font-semibold text-panel">
+            <span className="absolute -left-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-semibold text-white">
               {index + 1}
             </span>
           </span>

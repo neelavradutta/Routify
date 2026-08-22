@@ -54,17 +54,17 @@ export default function AuthCard({ mode }: Props) {
 
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.05fr_0.95fr]">
-      <aside className="relative hidden overflow-hidden border-r border-line bg-[#E4D9C8] px-12 py-14 lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden border-r border-slate-200 bg-white px-12 py-14 lg:flex lg:flex-col lg:justify-between">
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 18% 22%, rgba(58,104,84,0.18), transparent 42%), radial-gradient(circle at 78% 68%, rgba(181,74,50,0.12), transparent 36%)',
+              'radial-gradient(circle at 16% 18%, rgba(13,148,136,0.22), transparent 40%), radial-gradient(circle at 82% 24%, rgba(59,130,246,0.16), transparent 38%), radial-gradient(circle at 70% 78%, rgba(244,63,94,0.14), transparent 42%)',
           }}
         />
         <div className="relative">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage text-panel shadow-press">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-press">
               <Compass size={18} strokeWidth={1.75} />
             </span>
             <div>
@@ -87,7 +87,7 @@ export default function AuthCard({ mode }: Props) {
             ['03', 'Filter', 'Unlit and isolated'],
           ].map(([n, t, d]) => (
             <li key={n} className="rounded-xl border border-line/80 bg-panel/70 p-3 backdrop-blur-sm">
-              <p className="text-[10px] font-semibold tracking-[0.16em] text-sage">{n}</p>
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-teal-600">{n}</p>
               <p className="mt-2 text-sm font-medium text-ink">{t}</p>
               <p className="mt-1 text-[11px] text-muted">{d}</p>
             </li>
@@ -103,7 +103,7 @@ export default function AuthCard({ mode }: Props) {
           className="w-full max-w-[380px]"
         >
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sage text-panel">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white">
               <Compass size={16} strokeWidth={1.75} />
             </span>
             <p className="font-serif text-lg text-ink">Safe Routes</p>
@@ -160,7 +160,7 @@ export default function AuthCard({ mode }: Props) {
 
           <p className="mt-6 text-sm text-muted">
             {copy.switchText}{' '}
-            <Link href={copy.switchLink} className="font-medium text-sage underline underline-offset-4 hover:text-sage-dark">
+            <Link href={copy.switchLink} className="font-medium text-teal-700 underline underline-offset-4 hover:text-teal-800">
               {copy.switchLabel}
             </Link>
           </p>

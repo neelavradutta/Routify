@@ -5,30 +5,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ground: '#E8DFD2',
-        panel: '#F4EEE4',
-        line: '#D4C9BA',
-        ink: '#1C1713',
-        muted: '#6A5F54',
+        ground: '#FFFFFF',
+        panel: '#FFFFFF',
+        line: '#E5E7EB',
+        ink: '#0F172A',
+        muted: '#64748B',
         sage: {
-          DEFAULT: '#3A6854',
-          dark: '#2E5344',
-          soft: '#DCE8E0',
+          DEFAULT: '#0D9488',
+          dark: '#0F766E',
+          soft: '#CCFBF1',
         },
         clay: {
-          DEFAULT: '#B54A32',
-          soft: '#F1DDD6',
+          DEFAULT: '#F43F5E',
+          soft: '#FFE4E6',
         },
-        amberish: '#B9842A',
+        amberish: '#F59E0B',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
       },
       boxShadow: {
-        panel: '0 1px 0 rgba(28, 23, 19, 0.04), 0 8px 24px -18px rgba(28, 23, 19, 0.35)',
-        lift: '0 12px 32px -16px rgba(28, 23, 19, 0.38)',
-        press: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+        panel: '0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -16px rgba(15, 23, 42, 0.18)',
+        lift: '0 16px 40px -20px rgba(13, 148, 136, 0.35)',
+        press: 'inset 0 1px 0 rgba(255,255,255,0.25)',
       },
       transitionTimingFunction: {
         calm: 'cubic-bezier(0.22, 1, 0.36, 1)',

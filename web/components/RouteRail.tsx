@@ -53,10 +53,10 @@ function FilterButton({
       onClick={onClick}
       whileTap={{ scale: 0.98 }}
       className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-200 ease-calm ${
-        pressed ? 'border-sage/40 bg-sage-soft shadow-panel' : 'border-line bg-[#FBF7F0] hover:border-[#cbbfae]'
+        pressed ? 'border-teal-300 bg-teal-50 shadow-panel' : 'border-slate-200 bg-white hover:border-teal-300'
       }`}
     >
-      <span className={`mt-0.5 ${pressed ? 'text-sage' : 'text-muted'}`}>{icon}</span>
+      <span className={`mt-0.5 ${pressed ? 'text-teal-600' : 'text-muted'}`}>{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium text-ink">{label}</span>
         <span className="mt-0.5 block text-[11px] text-muted">{hint}</span>
@@ -116,7 +116,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
         <label className="label" htmlFor={`place-${which}`}>
           {isStart ? 'Start' : 'Destination'}
         </label>
-        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-sage">Map click</span>}
+        {active && <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-teal-600">Map click</span>}
       </div>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
@@ -156,7 +156,7 @@ function PlaceField({ which }: { which: 'from' | 'to' }) {
                     setPlace(which, result);
                     setOpen(false);
                   }}
-                  className="block w-full px-3 py-2.5 text-left transition-colors duration-150 hover:bg-sage-soft/70"
+                  className="block w-full px-3 py-2.5 text-left transition-colors duration-150 hover:bg-teal-50"
                 >
                   <span className="block truncate text-sm text-ink">{result.label}</span>
                   <span className="block truncate text-xs text-muted">{result.context}</span>
@@ -186,18 +186,18 @@ function Comparison({
     <div className="h-36 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 4, left: -28, bottom: 0 }} barGap={4}>
-          <CartesianGrid stroke="#D4C9BA" strokeDasharray="3 5" vertical={false} />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6A5F54' }} axisLine={false} tickLine={false} />
-          <YAxis yAxisId="score" domain={[0, 100]} tick={{ fontSize: 10, fill: '#6A5F54' }} axisLine={false} tickLine={false} />
+          <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 5" vertical={false} />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+          <YAxis yAxisId="score" domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} />
           <YAxis yAxisId="time" orientation="right" hide />
           <ChartTooltip
             cursor={{ fill: 'rgba(28,23,19,0.04)' }}
             contentStyle={{
-              background: '#F4EEE4',
-              border: '1px solid #D4C9BA',
+              background: '#FFFFFF',
+              border: '1px solid #E5E7EB',
               borderRadius: 10,
               fontSize: 12,
-              color: '#1C1713',
+              color: '#0F172A',
             }}
             formatter={(value, name) => (name === 'Safety' ? [`${value}/100`, name] : [`${value} min`, name])}
             labelFormatter={(label) => {
@@ -210,7 +210,7 @@ function Comparison({
               <Cell key={row.name} fill={SCORE_COLORS[scoreTone(row.safety)]} />
             ))}
           </Bar>
-          <Bar yAxisId="time" dataKey="minutes" name="Minutes" fill="#C9BBA8" radius={[4, 4, 0, 0]} maxBarSize={22} />
+          <Bar yAxisId="time" dataKey="minutes" name="Minutes" fill="#38BDF8" radius={[4, 4, 0, 0]} maxBarSize={22} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -243,12 +243,13 @@ export default function RouteRail() {
 
   const fastest = plan ? plan.routes.reduce((a, b) => (a.duration <= b.duration ? a : b)) : null;
   const canRoute = Boolean(from && to) && !planning;
+  const [spin, setSpin] = useState(0);
 
   return (
     <aside className="flex h-full w-full flex-col border-r border-line bg-panel">
       <header className="flex items-center justify-between border-b border-line px-5 py-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sage text-panel shadow-press">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white shadow-press">
             <Compass size={16} strokeWidth={1.75} />
           </span>
           <div>
@@ -271,23 +272,25 @@ export default function RouteRail() {
 
       <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
         <section>
-          <div className="relative pl-5">
-            <span className="absolute bottom-8 left-[7px] top-8 w-px bg-line" />
-            <span className="absolute left-0 top-8 h-3.5 w-3.5 rounded-full border-2 border-sage bg-panel" />
-            <span className="absolute bottom-8 left-0.5 h-3 w-3 rotate-45 border-2 border-ink bg-panel" />
-
+          <div className="relative">
             <PlaceField which="from" />
 
-            <div className="my-2 flex justify-end">
+            <div className="relative z-10 my-1 flex items-center justify-center py-1">
+              <span className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-teal-400 via-slate-200 to-rose-400" />
               <motion.button
                 type="button"
-                onClick={swap}
+                onClick={() => {
+                  swap();
+                  setSpin((n) => n + 180);
+                }}
                 disabled={!from && !to}
-                whileTap={{ rotate: 180, scale: 0.94 }}
-                className="btn-ghost !rounded-full !px-3 !py-1.5 text-[11px]"
+                animate={{ rotate: spin }}
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 16 }}
+                className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-teal-500 bg-white text-teal-700 shadow-panel hover:bg-teal-50 disabled:border-slate-200 disabled:text-slate-300"
+                title="Swap start and destination"
               >
-                <ArrowUpDown size={12} strokeWidth={1.75} />
-                Swap
+                <ArrowUpDown size={16} strokeWidth={2} />
               </motion.button>
             </div>
 
@@ -300,7 +303,7 @@ export default function RouteRail() {
 
         <section className="space-y-2">
           <p className="label">Time of day</p>
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-[#EFE8DC] p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
             {[
               { on: false, label: 'Day', icon: <Sun size={14} strokeWidth={1.75} /> },
               { on: true, label: 'Night', icon: <Moon size={14} strokeWidth={1.75} /> },
@@ -312,7 +315,7 @@ export default function RouteRail() {
                   if (night !== option.on) toggle('night');
                 }}
                 className={`relative flex items-center justify-center gap-2 rounded-lg py-2 text-[13px] font-medium transition-all duration-200 ${
-                  night === option.on ? 'bg-panel text-ink shadow-panel' : 'text-muted hover:text-ink'
+                  night === option.on ? 'bg-white text-teal-800 shadow-panel' : 'text-muted hover:text-ink'
                 }`}
               >
                 {option.icon}
@@ -428,7 +431,7 @@ export default function RouteRail() {
                   <button
                     type="button"
                     onClick={() => toggle('showZones')}
-                    className="rounded-full border border-line bg-[#FBF7F0] px-2.5 py-1 text-[11px] font-medium text-ink transition-colors hover:border-sage/40 hover:bg-sage-soft"
+                    className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-ink transition-colors hover:border-teal-300 hover:bg-teal-50"
                   >
                     {showZones ? 'Hide zones' : 'Show zones'}
                   </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, Circle, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -19,8 +19,8 @@ const pin = (kind: 'from' | 'to') =>
     iconAnchor: [14, 14],
     html:
       kind === 'from'
-        ? `<span style="display:grid;place-items:center;width:28px;height:28px"><span style="position:absolute;width:28px;height:28px;border-radius:9999px;background:rgba(58,104,84,0.18);animation:pulseRing 1.6s ease-out infinite"></span><span style="width:14px;height:14px;border-radius:9999px;background:#3A6854;box-shadow:0 0 0 3px #F4EEE4"></span></span>`
-        : `<span style="display:grid;place-items:center;width:28px;height:28px"><span style="width:13px;height:13px;transform:rotate(45deg);background:#1C1713;box-shadow:0 0 0 3px #F4EEE4"></span></span>`,
+        ? `<span style="display:grid;place-items:center;width:28px;height:28px"><span style="position:absolute;width:28px;height:28px;border-radius:9999px;background:rgba(13,148,136,0.28);animation:pulseRing 1.6s ease-out infinite"></span><span style="width:14px;height:14px;border-radius:9999px;background:#0D9488;box-shadow:0 0 0 3px #fff"></span></span>`
+        : `<span style="display:grid;place-items:center;width:28px;height:28px"><span style="width:13px;height:13px;transform:rotate(45deg);background:#F43F5E;box-shadow:0 0 0 3px #fff"></span></span>`,
   });
 
 const ZONE_LABEL: Record<string, string> = {
@@ -92,6 +92,47 @@ function routePoints(route: Route) {
   return route.segments.flatMap((s) => s.coords);
 }
 
+function DrawPolyline({
+  positions,
+  pathOptions,
+  delayMs,
+  children,
+  eventHandlers,
+}: {
+  positions: [number, number][];
+  pathOptions: L.PathOptions;
+  delayMs: number;
+  children?: React.ReactNode;
+  eventHandlers?: L.LeafletEventHandlerFnMap;
+}) {
+  const ref = useRef<L.Polyline | null>(null);
+
+  useEffect(() => {
+    const line = ref.current;
+    if (!line) return;
+    const el = line.getElement() as SVGPathElement | undefined;
+    if (!el || typeof el.getTotalLength !== 'function') return;
+
+    const length = el.getTotalLength();
+    el.style.strokeDasharray = `${length}`;
+    el.style.strokeDashoffset = `${length}`;
+    el.style.transition = 'none';
+
+    const start = window.setTimeout(() => {
+      el.style.transition = 'stroke-dashoffset 0.55s cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.strokeDashoffset = '0';
+    }, delayMs);
+
+    return () => window.clearTimeout(start);
+  }, [positions, delayMs]);
+
+  return (
+    <Polyline ref={ref} positions={positions} pathOptions={pathOptions} eventHandlers={eventHandlers}>
+      {children}
+    </Polyline>
+  );
+}
+
 export default function MapView() {
   const { from, to, plan, selected, hovered, hover, showZones, pick, setPick } = useApp();
 
@@ -110,6 +151,17 @@ export default function MapView() {
     return null;
   }, [active, from, to]);
 
+  const drawPlan = useMemo(() => {
+    if (!active) return [];
+    const total = Math.max(1, active.segments.reduce((sum, s) => sum + s.length, 0));
+    let acc = 0;
+    return active.segments.map((segment) => {
+      const delayMs = (acc / total) * 900;
+      acc += segment.length;
+      return { segment, delayMs };
+    });
+  }, [active]);
+
   return (
     <div className="relative h-full w-full">
       <MapContainer
@@ -124,8 +176,8 @@ export default function MapView() {
         ]}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> HOT'
           maxZoom={19}
         />
 
@@ -138,7 +190,7 @@ export default function MapView() {
               key={`zone-${i}`}
               center={[zone.lat, zone.lng]}
               radius={zone.radius}
-              pathOptions={{ color: '#B54A32', weight: 1, opacity: 0.4, fillColor: '#B54A32', fillOpacity: 0.12 }}
+              pathOptions={{ color: '#F43F5E', weight: 1.5, opacity: 0.55, fillColor: '#FB7185', fillOpacity: 0.18 }}
             >
               <Tooltip direction="top" opacity={1}>
                 <span className="font-medium">{ZONE_LABEL[zone.reason]}</span>
@@ -151,18 +203,19 @@ export default function MapView() {
           <Polyline
             key={`ghost-${route.id}`}
             positions={routePoints(route)}
-            pathOptions={{ color: '#6A5F54', weight: 4, opacity: 0.22, dashArray: '1 8', lineCap: 'round' }}
+            pathOptions={{ color: '#818CF8', weight: 4, opacity: 0.35, dashArray: '2 8', lineCap: 'round' }}
           />
         ))}
 
-        {active?.segments.map((segment, i) => (
-          <Polyline
-            key={`seg-${active.id}-${i}`}
+        {drawPlan.map(({ segment, delayMs }, i) => (
+          <DrawPolyline
+            key={`seg-${active?.id}-${i}`}
             positions={segment.coords}
+            delayMs={delayMs}
             pathOptions={{
               color: SCORE_COLORS[scoreTone(segment.score)],
-              weight: hovered === i ? 10 : 7,
-              opacity: hovered === null || hovered === i ? 0.96 : 0.42,
+              weight: hovered === i ? 11 : 8,
+              opacity: hovered === null || hovered === i ? 1 : 0.45,
               lineCap: 'round',
               lineJoin: 'round',
             }}
@@ -180,7 +233,7 @@ export default function MapView() {
                 light {Math.round(segment.factors.light * 100)}% · isolation {Math.round(segment.factors.isolation * 100)}%
               </span>
             </Tooltip>
-          </Polyline>
+          </DrawPolyline>
         ))}
 
         {from && <Marker position={[from.lat, from.lng]} icon={pin('from')} />}
@@ -194,9 +247,9 @@ export default function MapView() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-panel/95 px-3 py-1.5 text-[12px] text-ink shadow-panel backdrop-blur-sm"
+            className="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 text-[12px] text-ink shadow-panel backdrop-blur-sm"
           >
-            <MousePointerClick size={13} strokeWidth={1.75} className="text-sage" />
+            <MousePointerClick size={13} strokeWidth={1.75} className="text-teal-600" />
             Click map to set {pick === 'from' ? 'start' : 'destination'}
           </motion.div>
         </AnimatePresence>
@@ -207,17 +260,17 @@ export default function MapView() {
           <button
             type="button"
             onClick={() => setPick('from')}
-            className={`chip transition-all duration-200 ${pick === 'from' ? 'border-sage/50 bg-sage-soft' : ''}`}
+            className={`chip transition-all duration-200 ${pick === 'from' ? 'border-teal-400 bg-teal-50 text-teal-800' : ''}`}
           >
-            <span className="h-2 w-2 rounded-full bg-sage" />
+            <span className="h-2 w-2 rounded-full bg-teal-500" />
             {from?.label ?? 'Start unset'}
           </button>
           <button
             type="button"
             onClick={() => setPick('to')}
-            className={`chip transition-all duration-200 ${pick === 'to' ? 'border-ink/20 bg-[#EFE8DC]' : ''}`}
+            className={`chip transition-all duration-200 ${pick === 'to' ? 'border-rose-300 bg-rose-50 text-rose-800' : ''}`}
           >
-            <span className="h-2 w-2 rotate-45 bg-ink" />
+            <span className="h-2 w-2 rotate-45 bg-rose-500" />
             {to?.label ?? 'Destination unset'}
           </button>
         </div>
@@ -226,10 +279,10 @@ export default function MapView() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="pointer-events-none rounded-xl border border-line bg-panel/95 px-3 py-2 shadow-panel backdrop-blur-sm"
+            className="pointer-events-none rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-panel backdrop-blur-sm"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{selectedRoute.label}</p>
-            <p className="mt-0.5 text-sm font-semibold tabular-nums text-ink">{selectedRoute.safety}/100</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{selectedRoute.label}</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-teal-700">{selectedRoute.safety}/100</p>
           </motion.div>
         )}
       </div>
