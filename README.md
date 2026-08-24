@@ -56,13 +56,6 @@ Red circles on the map only appear when at least one **Avoid** filter is on.
 | `OPENAI_API_KEY` | `server/.env` | Smarter “why this route” text. Works without it too. |
 | `NEXT_PUBLIC_API_URL` | `web/.env.local` | Point the website at a different API URL. |
 
-## Tests
-
-```bash
-cd server
-npm test
-```
-
 ## Notes
 
 - Safety scores use official crime statistics (NCRB), OpenStreetMap street data, and curated hotspot seeds. They are estimates, not guarantees.
